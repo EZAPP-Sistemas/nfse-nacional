@@ -43,7 +43,7 @@ class Dps implements DpsInterface
      * @param stdClass|null $std
      * @throws DOMException
      */
-    public function __construct(stdClass $std = null)
+    public function __construct(?stdClass $std = null)
     {
         $this->init($std);
         $this->dom = new Dom('1.0', 'UTF-8');
@@ -55,7 +55,7 @@ class Dps implements DpsInterface
      *
      * @param stdClass|null $dps
      */
-    private function init(stdClass $dps = null)
+    private function init(?stdClass $dps = null)
     {
         if (!empty($dps)) {
             $this->std = $this->propertiesToLower($dps);
@@ -68,7 +68,7 @@ class Dps implements DpsInterface
         }
     }
 
-    public function render(stdClass $std = null)
+    public function render(?stdClass $std = null)
     {
         if ($this->dom->hasChildNodes()) {
             $this->dom = new Dom('1.0', 'UTF-8');
@@ -1365,7 +1365,7 @@ class Dps implements DpsInterface
         return $this->dom->saveXML();
     }
 
-    public function renderEvento(stdClass $std = null)
+    public function renderEvento(?stdClass $std = null)
     {
         if ($this->dom->hasChildNodes()) {
             $this->dom = new Dom('1.0', 'UTF-8');
