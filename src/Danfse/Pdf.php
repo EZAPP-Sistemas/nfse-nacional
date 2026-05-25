@@ -138,7 +138,10 @@ class Pdf extends \FPDF
     public function marcaDagua(string $texto, int $cinzaK = 35, int $tamanho = 50): void
     {
         $tomCinza = (int) (255 - (255 * $cinzaK / 100));
-        $this->SetFont($this->FontFamily, '', $tamanho);
+        // Fallback para 'helvetica' caso nenhuma fonte tenha sido setada antes
+        // (cenário possível em PDFs minimalistas ou stubs em desenvolvimento).
+        $familia = $this->FontFamily !== '' ? $this->FontFamily : 'helvetica';
+        $this->SetFont($familia, '', $tamanho);
         $this->SetTextColor($tomCinza, $tomCinza, $tomCinza);
         $this->_out('q');
         $angle = 45;
