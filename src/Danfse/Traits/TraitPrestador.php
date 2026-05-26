@@ -23,14 +23,14 @@ trait TraitPrestador
     {
         $altLinha = 6.4;
         $larguraTotal = $this->maxW - 2 * $this->margesq;
-        $col = 50.9;
-        $colDupla = 101.9;
+        $col = $larguraTotal / 4;        // grade uniforme (igual aos demais blocos)
+        $colDupla = 2 * $col;
 
-        // Coordenadas X das 4 colunas
+        // Coordenadas X das 4 colunas (grade uniforme)
         $x1 = $xIni;
-        $x2 = $xIni + 51.1;
-        $x3 = $xIni + 102.1;
-        $x4 = $xIni + 153.2;
+        $x2 = $xIni + $col;
+        $x3 = $xIni + 2 * $col;
+        $x4 = $xIni + 3 * $col;
 
         // ----- L1: título cinza + CNPJ/CPF/NIF + IM + Telefone -----
         $this->desenharTituloBlocoCampo($x1, $yIni, $col, $altLinha, 'PRESTADOR / FORNECEDOR');
