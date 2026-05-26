@@ -5,10 +5,10 @@ namespace Hadder\NfseNacional\Danfse;
 use Hadder\NfseNacional\Danfse\Traits\TraitCabecalho;
 use Hadder\NfseNacional\Danfse\Traits\TraitPrestador;
 use Hadder\NfseNacional\Danfse\Traits\TraitTomador;
+use Hadder\NfseNacional\Danfse\Traits\TraitDestinatario;
+use Hadder\NfseNacional\Danfse\Traits\TraitIntermediario;
+use Hadder\NfseNacional\Danfse\Traits\TraitServico;
 // Traits abaixo serão criados nas próximas fatias da NT-008.
-// use Hadder\NfseNacional\Danfse\Traits\TraitDestinatario;
-// use Hadder\NfseNacional\Danfse\Traits\TraitIntermediario;
-// use Hadder\NfseNacional\Danfse\Traits\TraitServico;
 // use Hadder\NfseNacional\Danfse\Traits\TraitTributacaoMunicipal;
 // use Hadder\NfseNacional\Danfse\Traits\TraitTributacaoFederal;
 // use Hadder\NfseNacional\Danfse\Traits\TraitTributacaoIBSCBS;
@@ -33,10 +33,10 @@ class Danfse extends DanfseCommon
     use TraitCabecalho;
     use TraitPrestador;
     use TraitTomador;
+    use TraitDestinatario;
+    use TraitIntermediario;
+    use TraitServico;
     // Traits abaixo serão habilitados nas próximas fatias da implementação.
-    // use TraitDestinatario;
-    // use TraitIntermediario;
-    // use TraitServico;
     // use TraitTributacaoMunicipal;
     // use TraitTributacaoFederal;
     // use TraitTributacaoIBSCBS;
@@ -515,12 +515,12 @@ class Danfse extends DanfseCommon
     // Cada método deve retornar o $y final ocupado pelo bloco.
     // -----------------------------------------------------------------
 
-    // blocoCabecalho() implementado em TraitCabecalho
-    // blocoPrestador() implementado em TraitPrestador
-    // blocoTomador()   implementado em TraitTomador
-    protected function blocoDestinatario(float $x, float $y): float        { return $y + 19; }
-    protected function blocoIntermediario(float $x, float $y): float       { return $y + 19; }
-    protected function blocoServico(float $x, float $y): float             { return $y + 17; }
+    // blocoCabecalho()     implementado em TraitCabecalho
+    // blocoPrestador()     implementado em TraitPrestador
+    // blocoTomador()       implementado em TraitTomador
+    // blocoDestinatario()  implementado em TraitDestinatario
+    // blocoIntermediario() implementado em TraitIntermediario
+    // blocoServico()       implementado em TraitServico
     protected function blocoTributacaoMunicipal(float $x, float $y): float { return $y + 19; }
     protected function blocoTributacaoFederal(float $x, float $y): float   { return $y + 13; }
     protected function blocoTributacaoIBSCBS(float $x, float $y): float    { return $y + 20; }
