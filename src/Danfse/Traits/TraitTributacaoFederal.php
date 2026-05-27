@@ -44,21 +44,29 @@ trait TraitTributacaoFederal
             'Contribuições Sociais - Retidas',
             $vRetSociais > 0 ? 'R$ ' . number_format($vRetSociais, 2, ',', '.') : '-');
 
-        // ----- L2 (grade 4 colunas): PIS | COFINS | Descrição Contrib. Sociais Retidas (2 cols) -----
-        $y2 = $yIni + $altLinha;
-        $this->desenharCelula($xIni, $y2, $colQuarta, $altLinha,
-            'PIS - Débito Apuração Própria',
-            $this->formatar($this->getTag($piscofins, 'vPis', ''), 'moeda'));
-        $this->desenharCelula($xIni + $colQuarta, $y2, $colQuarta, $altLinha,
-            'COFINS - Débito Apuração Própria',
-            $this->formatar($this->getTag($piscofins, 'vCofins', ''), 'moeda'));
-        $this->desenharCelula($xIni + 2 * $colQuarta, $y2, 2 * $colQuarta, $altLinha,
-            'Descrição Contrib. Sociais - Retidas',
-            EnumDecoder::truncate(
-                EnumDecoder::decode(EnumDecoder::TP_RET_PIS_COFINS, $this->getTag($piscofins, 'tpRetPISCofins', '')),
-                80));
+        // ----- L2: PIS | COFINS | Descrição Contrib. Sociais Retidas
+        //       (NT nota ***: impressa só para competência até o fim de 2026) -----
+        $dCompet = $this->getTag($this->infDPS, 'dCompet', '');
+        $anoCompet = (int) substr($dCompet, 0, 4);
+        $imprimirL2 = $dCompet === '' || $anoCompet <= 2026;
 
-        return $yIni + 2 * $altLinha;
+        $y = $yIni + $altLinha;
+        if ($imprimirL2) {
+            $this->desenharCelula($xIni, $y, $colQuarta, $altLinha,
+                'PIS - Débito Apuração Própria',
+                $this->formatar($this->getTag($piscofins, 'vPis', ''), 'moeda'));
+            $this->desenharCelula($xIni + $colQuarta, $y, $colQuarta, $altLinha,
+                'COFINS - Débito Apuração Própria',
+                $this->formatar($this->getTag($piscofins, 'vCofins', ''), 'moeda'));
+            $this->desenharCelula($xIni + 2 * $colQuarta, $y, 2 * $colQuarta, $altLinha,
+                'Descrição Contrib. Sociais - Retidas',
+                EnumDecoder::truncate(
+                    EnumDecoder::decode(EnumDecoder::TP_RET_PIS_COFINS, $this->getTag($piscofins, 'tpRetPISCofins', '')),
+                    80));
+            $y += $altLinha;
+        }
+
+        return $y;
     }
 
     /** Tenta uma lista de tags; retorna o primeiro valor não-vazio. */

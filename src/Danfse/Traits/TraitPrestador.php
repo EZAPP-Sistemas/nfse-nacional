@@ -54,27 +54,33 @@ trait TraitPrestador
         $codCep = $cMun !== '' ? "{$cMun} / {$this->formatarCEP($cep)}" : '-';
         $this->desenharCelula($x4, $y2, $col, $altLinha, 'Código IBGE / CEP', $codCep);
 
-        // ----- L3: Endereço | E-mail -----
-        $y3 = $yIni + 2 * $altLinha;
-        $this->desenharCelula($x1, $y3, $colDupla, $altLinha, 'Endereço',
-            EnumDecoder::truncate($this->extrairEnderecoLogradouro($this->prest), 80));
-        $this->desenharCelula($x3, $y3, $colDupla, $altLinha, 'E-mail',
-            EnumDecoder::truncate($this->getTag($this->prest, 'email', ''), 80));
+        // Cursor de Y corrente (linha 3 em diante pode ser suprimida — NT nota *).
+        $y = $yIni + 2 * $altLinha;
+
+        // ----- L3: Endereço | E-mail (NT nota *: suprime se ambos vazios) -----
+        $endereco = $this->extrairEnderecoLogradouro($this->prest);
+        $email = $this->getTag($this->prest, 'email', '');
+        if ($endereco !== '-' || $email !== '') {
+            $this->desenharCelula($x1, $y, $colDupla, $altLinha, 'Endereço',
+                EnumDecoder::truncate($endereco, 80));
+            $this->desenharCelula($x3, $y, $colDupla, $altLinha, 'E-mail',
+                EnumDecoder::truncate($email, 80));
+            $y += $altLinha;
+        }
 
         // ----- L4: Simples Nacional | Regime de Apuração -----
-        $y4 = $yIni + 3 * $altLinha;
         $regTrib = $this->getChild($this->prest, 'regTrib');
         $opSimpNac = $this->getTag($regTrib, 'opSimpNac', '');
         $regApTribSN = $this->getTag($regTrib, 'regApTribSN', '');
 
-        $this->desenharCelula($x1, $y4, $col, $altLinha,
+        $this->desenharCelula($x1, $y, $col, $altLinha,
             'Simples Nacional na Data de Competência',
             EnumDecoder::truncate(EnumDecoder::decode(EnumDecoder::OP_SIMP_NAC, $opSimpNac), 40));
-        $this->desenharCelula($x3, $y4, $colDupla, $altLinha,
+        $this->desenharCelula($x3, $y, $colDupla, $altLinha,
             'Regime de Apuração Tributária pelo SN',
             EnumDecoder::truncate(EnumDecoder::decode(EnumDecoder::REG_AP_TRIB_SN, $regApTribSN), 80));
+        $y += $altLinha;
 
-        $alturaBloco = 4 * $altLinha;
-        return $yIni + $alturaBloco;
+        return $y;
     }
 }

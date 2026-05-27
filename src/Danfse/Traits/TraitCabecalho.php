@@ -23,23 +23,24 @@ trait TraitCabecalho
     {
         $larguraTotal = $this->maxW - 2 * $this->margesq;
         $altCabecalho = 11.6;
+        $cw = $larguraTotal / 4;        // grade uniforme (igual aos blocos abaixo)
 
         // ----- Cabeçalho: faixa com fundo cinza 5% (sem borda própria;
         //       a moldura global desenhada por Danfse::desenharMolduraGlobal cuida) -----
         $this->pdf->SetFillColor(242, 242, 242);
         $this->pdf->Rect($xIni, $yIni, $larguraTotal, $altCabecalho, 'F');
 
+        // Zonas do cabeçalho relativas à grade: logo (col 1), título central
+        // (cols 2-3) e identificação município/ambiente (col 4).
         $this->desenharLogoNfseNacional($xIni + 1.9, $yIni + 1.4);
-        $this->desenharTituloCentral($xIni + 51.1, $yIni, 101.9);
-        $this->desenharIdentMunicipioAmbiente($xIni + 153.2, $yIni, 50.9);
+        $this->desenharTituloCentral($xIni + $cw, $yIni, 2 * $cw);
+        $this->desenharIdentMunicipioAmbiente($xIni + 3 * $cw, $yIni, $cw);
 
         // ----- Bloco "DADOS DA NFS-e" -----
-        // Grade uniforme de 4 colunas (igual aos blocos abaixo: PRESTADOR, TOMADOR,
-        // tributações, etc.). L1 ocupa cols 1+2+3 (CHAVE longa); L2/L3/L4 usam
-        // cols 1, 2 e 3 (3 campos cada). Col 4 fica reservada à área do QR Code.
+        // L1 ocupa cols 1+2+3 (CHAVE longa); L2/L3/L4 usam cols 1, 2 e 3
+        // (3 campos cada). Col 4 fica reservada à área do QR Code.
         $altLinha = 6.7;
         $alturaBlocoDados = 4 * $altLinha;
-        $cw = $larguraTotal / 4;        // mesma grade dos blocos abaixo
         $larguraEsq = 3 * $cw;          // L1 ocupa as 3 primeiras colunas
         $yDados = $yIni + $altCabecalho;
 
@@ -84,8 +85,8 @@ trait TraitCabecalho
             'FINALIDADE',
             EnumDecoder::truncate(EnumDecoder::decode(EnumDecoder::FIN_NFSE, $this->getTag($this->infDPS, 'finNFSe', '')), 40));
 
-        // ----- QR Code (posição absoluta NT-008 §2.4.3: X=17,48cm Y=1,67cm) -----
-        $this->desenharQrCodeENotaConsulta();
+        // ----- QR Code (NT-008 §2.4.3) posicionado na col 4 da grade -----
+        $this->desenharQrCodeENotaConsulta($xIni, $larguraTotal);
 
         return $yDados + $alturaBlocoDados;
     }
@@ -97,7 +98,8 @@ trait TraitCabecalho
     {
         $logoFixo = self::STORAGE_LOGOS . '/logo-nfs-e-horizontal.png';
         if (is_readable($logoFixo)) {
-            $this->pdf->Image($logoFixo, $x, $y, 40, 8.5, 'PNG');
+            // Altura 0 → FPDF calcula proporcionalmente à largura (evita distorção).
+            $this->pdf->Image($logoFixo, $x, $y + 1.2, 40, 0, 'PNG');
             return;
         }
         // Fallback: placeholder textual estilizado
@@ -152,23 +154,28 @@ trait TraitCabecalho
     }
 
     /**
-     * QR Code (NT-008 §2.4.3) + descrição complementar em 3 linhas (6pt).
-     * Coordenadas absolutas conforme NT: X=17,48cm Y=1,67cm; tamanho 1,52x1,52cm.
+     * QR Code (NT-008 §2.4.3, tamanho 1,52cm) + descrição complementar (6pt),
+     * posicionados na 4ª coluna da grade (à direita do bloco DADOS NFS-e).
      */
-    private function desenharQrCodeENotaConsulta(): void
+    private function desenharQrCodeENotaConsulta(float $xIni, float $larguraTotal): void
     {
         if ($this->chaveAcesso === '') {
             return;
         }
+        $cw = $larguraTotal / 4;
+        $xCol4 = $xIni + 3 * $cw;
+        $qrSize = 15.2;
+        $xQr = $xCol4 + ($cw - $qrSize) / 2;   // centralizado na col 4
+
         $url = 'https://www.nfse.gov.br/ConsultaPublica/?tpc=1&chave=' . $this->chaveAcesso;
-        $this->pdf->qrCode(174.8, 13.5, 15.2, $url);
+        $this->pdf->qrCode($xQr, 13.5, $qrSize, $url);
 
         $this->pdf->SetTextColor(0, 0, 0);
         $this->pdf->SetFont($this->defaultFont, '', 6);
         $this->pdf->textBox(
-            158.0,
+            $xCol4,
             29.5,
-            47.2,
+            $cw,
             6.8,
             'A autenticidade desta NFS-e pode ser verificada pela leitura deste código QR ou pela consulta da chave de acesso no portal nacional da NFS-e',
             'C',

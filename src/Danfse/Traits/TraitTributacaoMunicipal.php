@@ -44,60 +44,71 @@ trait TraitTributacaoMunicipal
                 $this->getTag($tribMun, 'cPais', '')
             ));
 
-        // ----- L2: Reg. Especial | Imunidade | Suspensão | Nº Processo -----
-        $y2 = $yIni + $altLinha;
-        $this->desenharCelula($xIni, $y2, $colQuarta, $altLinha,
-            'Regime Especial de Tributação do ISSQN',
-            EnumDecoder::truncate(
-                EnumDecoder::decode(EnumDecoder::REG_ESP_TRIB, $this->getTag($tribMun, 'regEspTrib', '')),
-                40));
-        $this->desenharCelula($xIni + $colQuarta, $y2, $colQuarta, $altLinha,
-            'Tipo de Imunidade do ISSQN',
-            EnumDecoder::truncate(
-                EnumDecoder::decode(EnumDecoder::TP_IMUNIDADE, $this->getTag($tribMun, 'tpImunidade', '')),
-                40));
-        $this->desenharCelula($xIni + 2 * $colQuarta, $y2, $colQuarta, $altLinha,
-            'Suspensão da Exigibilidade do ISSQN',
-            EnumDecoder::truncate(
-                EnumDecoder::decode(EnumDecoder::TP_SUSP, $this->getTag($tribMun, 'tpSusp', '')),
-                40));
-        $this->desenharCelula($xIni + 3 * $colQuarta, $y2, $colQuarta, $altLinha,
-            'Número Processo Suspensão', $this->getTag($tribMun, 'nProcesso', ''));
+        // Cursor de Y corrente — L2 e L3 podem ser suprimidas (NT nota **).
+        $y = $yIni + $altLinha;
 
-        // ----- L3: Benefício Municipal | Cálculo do BM | Total Deduções/Reduções | Desc. Incondicionado -----
-        $y3 = $yIni + 2 * $altLinha;
-        $this->desenharCelula($xIni, $y3, $colQuarta, $altLinha,
-            'Benefício Municipal',
-            EnumDecoder::truncate(
-                EnumDecoder::decode(EnumDecoder::TP_BM, $this->getTag($tribMun, 'tpBM', '')),
-                40));
-        $this->desenharCelula($xIni + $colQuarta, $y3, $colQuarta, $altLinha,
-            'Cálculo do BM', $this->getTag($tribMun, 'cBM', ''));
-        $this->desenharCelula($xIni + 2 * $colQuarta, $y3, $colQuarta, $altLinha,
-            'Total Deduções/Reduções',
-            $this->formatar($this->getTagFallback($tribMun, ['vTotDR', 'vDed']), 'moeda'));
-        $this->desenharCelula($xIni + 3 * $colQuarta, $y3, $colQuarta, $altLinha,
-            'Desconto Incondicionado',
-            $this->formatar($this->getTag($this->valores, 'vDescIncond', ''), 'moeda'));
+        // ----- L2: Reg. Especial | Imunidade | Suspensão | Nº Processo
+        //       (NT nota **: suprime se TODOS os campos da linha vazios) -----
+        if (!$this->todosVazios($tribMun, ['regEspTrib', 'tpImunidade', 'tpSusp', 'nProcesso'])) {
+            $this->desenharCelula($xIni, $y, $colQuarta, $altLinha,
+                'Regime Especial de Tributação do ISSQN',
+                EnumDecoder::truncate(
+                    EnumDecoder::decode(EnumDecoder::REG_ESP_TRIB, $this->getTag($tribMun, 'regEspTrib', '')),
+                    40));
+            $this->desenharCelula($xIni + $colQuarta, $y, $colQuarta, $altLinha,
+                'Tipo de Imunidade do ISSQN',
+                EnumDecoder::truncate(
+                    EnumDecoder::decode(EnumDecoder::TP_IMUNIDADE, $this->getTag($tribMun, 'tpImunidade', '')),
+                    40));
+            $this->desenharCelula($xIni + 2 * $colQuarta, $y, $colQuarta, $altLinha,
+                'Suspensão da Exigibilidade do ISSQN',
+                EnumDecoder::truncate(
+                    EnumDecoder::decode(EnumDecoder::TP_SUSP, $this->getTag($tribMun, 'tpSusp', '')),
+                    40));
+            $this->desenharCelula($xIni + 3 * $colQuarta, $y, $colQuarta, $altLinha,
+                'Número Processo Suspensão', $this->getTag($tribMun, 'nProcesso', ''));
+            $y += $altLinha;
+        }
 
-        // ----- L4: BC | Alíquota | Retenção | ISSQN Apurado -----
-        $y4 = $yIni + 3 * $altLinha;
-        $this->desenharCelula($xIni, $y4, $colQuarta, $altLinha,
+        // ----- L3: Benefício Municipal | Cálculo do BM | Total Deduções/Reduções | Desc. Incondicionado
+        //       (NT nota **: suprime se TODOS os campos da linha vazios) -----
+        $l3Vazia = $this->todosVazios($tribMun, ['tpBM', 'cBM', 'vTotDR', 'vDed'])
+            && $this->getTag($this->valores, 'vDescIncond', '') === '';
+        if (!$l3Vazia) {
+            $this->desenharCelula($xIni, $y, $colQuarta, $altLinha,
+                'Benefício Municipal',
+                EnumDecoder::truncate(
+                    EnumDecoder::decode(EnumDecoder::TP_BM, $this->getTag($tribMun, 'tpBM', '')),
+                    40));
+            $this->desenharCelula($xIni + $colQuarta, $y, $colQuarta, $altLinha,
+                'Cálculo do BM', $this->getTag($tribMun, 'cBM', ''));
+            $this->desenharCelula($xIni + 2 * $colQuarta, $y, $colQuarta, $altLinha,
+                'Total Deduções/Reduções',
+                $this->formatar($this->getTagFallback($tribMun, ['vTotDR', 'vDed']), 'moeda'));
+            $this->desenharCelula($xIni + 3 * $colQuarta, $y, $colQuarta, $altLinha,
+                'Desconto Incondicionado',
+                $this->formatar($this->getTag($this->valores, 'vDescIncond', ''), 'moeda'));
+            $y += $altLinha;
+        }
+
+        // ----- L4: BC | Alíquota | Retenção | ISSQN Apurado (sempre impressa) -----
+        $this->desenharCelula($xIni, $y, $colQuarta, $altLinha,
             'BC ISSQN',
             $this->formatar($this->getTag($tribMun, 'vBC', ''), 'moeda'));
-        $this->desenharCelula($xIni + $colQuarta, $y4, $colQuarta, $altLinha,
+        $this->desenharCelula($xIni + $colQuarta, $y, $colQuarta, $altLinha,
             'Alíquota Aplicada',
             $this->formatar($this->getTag($tribMun, 'pAliq', ''), 'percent'));
-        $this->desenharCelula($xIni + 2 * $colQuarta, $y4, $colQuarta, $altLinha,
+        $this->desenharCelula($xIni + 2 * $colQuarta, $y, $colQuarta, $altLinha,
             'Retenção do ISSQN',
             EnumDecoder::truncate(
                 EnumDecoder::decode(EnumDecoder::TP_RET_ISSQN, $this->getTag($tribMun, 'tpRetISSQN', '')),
                 40));
-        $this->desenharCelula($xIni + 3 * $colQuarta, $y4, $colQuarta, $altLinha,
+        $this->desenharCelula($xIni + 3 * $colQuarta, $y, $colQuarta, $altLinha,
             'ISSQN Apurado',
             $this->formatar($this->getTag($tribMun, 'vISSQN', ''), 'moeda'));
+        $y += $altLinha;
 
-        return $yIni + 4 * $altLinha;
+        return $y;
     }
 
     /** Tenta uma lista de tags; retorna o primeiro valor não-vazio. */

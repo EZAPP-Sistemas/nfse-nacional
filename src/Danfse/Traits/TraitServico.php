@@ -31,7 +31,7 @@ trait TraitServico
         $larguraTotal = $this->maxW - 2 * $this->margesq;
         $altL1 = 6.4;
         $altL2 = 6.4;
-        $altL3 = 12.0;
+        $altL3 = 18.0;
 
         // L1: título cinza (32mm) + 3 colunas iguais
         $colTitulo = 32.0;

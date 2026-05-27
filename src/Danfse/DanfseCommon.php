@@ -16,6 +16,7 @@ abstract class DanfseCommon
     protected string $papel = 'A4';
     protected float $margsup = 1.5;
     protected float $margesq = 1.5;
+    protected float $padInterno = 1.5;   // padding lateral entre moldura e conteúdo
     protected float $maxW = 210;
     protected float $maxH = 297;
     protected string $defaultFont = 'helvetica';
@@ -42,6 +43,13 @@ abstract class DanfseCommon
     {
         $this->logo = $logo;
         $this->logoAlign = $align;
+        return $this;
+    }
+
+    /** Define o padding lateral (mm) entre a moldura externa e o conteúdo. */
+    public function margemInternaParameters(float $mm): self
+    {
+        $this->padInterno = max(0.0, $mm);
         return $this;
     }
 

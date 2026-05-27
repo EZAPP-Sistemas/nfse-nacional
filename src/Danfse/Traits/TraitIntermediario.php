@@ -66,13 +66,18 @@ trait TraitIntermediario
         $codCep = $cMun !== '' ? "{$cMun} / {$this->formatarCEP($cep)}" : '-';
         $this->desenharCelula($x4, $y2, $col, $altLinha, 'Código IBGE / CEP', $codCep);
 
-        // ----- L3: Endereço | E-mail -----
-        $y3 = $yIni + 2 * $altLinha;
-        $this->desenharCelula($x1, $y3, $colDupla, $altLinha, 'Endereço',
-            EnumDecoder::truncate($this->extrairEnderecoLogradouro($this->interm), 80));
-        $this->desenharCelula($x3, $y3, $colDupla, $altLinha, 'E-mail',
-            EnumDecoder::truncate($this->getTag($this->interm, 'email', ''), 80));
+        // ----- L3: Endereço | E-mail (NT nota *: suprime se ambos vazios) -----
+        $y = $yIni + 2 * $altLinha;
+        $endereco = $this->extrairEnderecoLogradouro($this->interm);
+        $email = $this->getTag($this->interm, 'email', '');
+        if ($endereco !== '-' || $email !== '') {
+            $this->desenharCelula($x1, $y, $colDupla, $altLinha, 'Endereço',
+                EnumDecoder::truncate($endereco, 80));
+            $this->desenharCelula($x3, $y, $colDupla, $altLinha, 'E-mail',
+                EnumDecoder::truncate($email, 80));
+            $y += $altLinha;
+        }
 
-        return $yIni + 3 * $altLinha;
+        return $y;
     }
 }

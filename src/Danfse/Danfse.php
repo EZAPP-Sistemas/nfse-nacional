@@ -11,10 +11,9 @@ use Hadder\NfseNacional\Danfse\Traits\TraitServico;
 use Hadder\NfseNacional\Danfse\Traits\TraitTributacaoMunicipal;
 use Hadder\NfseNacional\Danfse\Traits\TraitTributacaoFederal;
 use Hadder\NfseNacional\Danfse\Traits\TraitTributacaoIBSCBS;
-// Traits abaixo serão criados nas próximas fatias da NT-008.
-// use Hadder\NfseNacional\Danfse\Traits\TraitTotaisNFSe;
-// use Hadder\NfseNacional\Danfse\Traits\TraitInfoComplementares;
-// use Hadder\NfseNacional\Danfse\Traits\TraitCanhoto;
+use Hadder\NfseNacional\Danfse\Traits\TraitTotaisNFSe;
+use Hadder\NfseNacional\Danfse\Traits\TraitInfoComplementares;
+use Hadder\NfseNacional\Danfse\Traits\TraitCanhoto;
 
 /**
  * DANFSe v2.0 — Documento Auxiliar da NFS-e Padrão Nacional.
@@ -39,10 +38,9 @@ class Danfse extends DanfseCommon
     use TraitTributacaoMunicipal;
     use TraitTributacaoFederal;
     use TraitTributacaoIBSCBS;
-    // Traits abaixo serão habilitados nas próximas fatias da implementação.
-    // use TraitTotaisNFSe;
-    // use TraitInfoComplementares;
-    // use TraitCanhoto;
+    use TraitTotaisNFSe;
+    use TraitInfoComplementares;
+    use TraitCanhoto;
 
     protected \DOMDocument $dom;
     protected ?\DOMElement $infNFSe = null;     // NFSe/infNFSe
@@ -108,6 +106,20 @@ class Danfse extends DanfseCommon
     }
 
     /**
+     * Força a representação como NFS-e Cancelada. Usado quando o status de
+     * cancelamento está no sistema consumidor mas o XML autorizado (tipoarq=1)
+     * ainda traz cStat=100. Dispara a marca d'água "CANCELADA" (§2.5.1) e faz
+     * o campo "SITUAÇÃO DA NFS-e" do cabeçalho decodificar "NFS-e Cancelada".
+     */
+    public function definirCancelada(bool $cancelada = true): self
+    {
+        if ($cancelada) {
+            $this->cStat = '101';
+        }
+        return $this;
+    }
+
+    /**
      * Orquestra os blocos do DANFSe na ordem fixa do Anexo I da NT-008.
      */
     protected function monta($logo = ''): void
@@ -118,6 +130,12 @@ class Danfse extends DanfseCommon
         $this->pdf->SetTitle('DANFSe ' . $this->chaveAcesso);
         $this->pdf->SetCreator($this->creditMessage ?? 'Hadder\\NfseNacional');
         $this->pdf->AddPage();
+
+        // Margem da moldura externa (posição na borda da página) preservada.
+        // O conteúdo e os separadores usam uma margem recuada (padding interno):
+        // todos os blocos leem $this->margesq, então recuamos temporariamente.
+        $margemMoldura = $this->margesq;
+        $this->margesq = $margemMoldura + $this->padInterno;
 
         $yStart = $this->margsup;
         $y = $yStart;
@@ -143,16 +161,31 @@ class Danfse extends DanfseCommon
         $boundaries[] = $y;
         $y = $this->blocoTotaisNFSe($this->margesq, $y);            // §2.1.11
         $boundaries[] = $y;
-        $y = $this->blocoInfoComplementares($this->margesq, $y);    // §2.1.12
 
-        $this->desenharMolduraGlobal($yStart, $y, $boundaries);
+        // O quadro de ciência (canhoto) fica DENTRO da moldura principal, fixado
+        // no rodapé da página. A moldura vai até o fim da página; as Informações
+        // Complementares expandem até o topo do canhoto.
+        // Reserva espaço no rodapé para a linha de créditos do integrador,
+        // evitando que a moldura/canhoto fique sobre o texto.
+        $alturaRodapeCreditos = $this->creditMessage !== null ? 5.0 : 0.0;
+        $yPageBottom = $this->maxH - $this->margsup - $alturaRodapeCreditos;
+        $altCanhoto = 14.0;
+        $yCanhotoTop = $this->exibirCanhoto ? $yPageBottom - $altCanhoto : $yPageBottom;
+
+        $this->blocoInfoComplementares($this->margesq, $y, $yCanhotoTop);  // §2.1.12
 
         if ($this->exibirCanhoto) {
-            $this->blocoCanhoto($this->margesq, $y);                // §2.1.13 (opcional)
+            $boundaries[] = $yCanhotoTop;   // separador full-width acima do canhoto
+            $this->blocoCanhoto($this->margesq, $yCanhotoTop, $altCanhoto);  // §2.1.13
         }
+
+        $this->desenharMolduraGlobal($yStart, $yPageBottom, $boundaries, $margemMoldura);
 
         $this->aplicarMarcaDagua();   // §2.5.1 CANCELADA / §2.5.2 SUBSTITUÍDA
         $this->rodapeCreditos();
+
+        // Restaura a margem original (higiene, caso render() seja reusado).
+        $this->margesq = $margemMoldura;
     }
 
     /**
@@ -189,6 +222,21 @@ class Danfse extends DanfseCommon
         }
         $node = $parent->getElementsByTagName($tag)->item(0);
         return $node ? trim($node->nodeValue) : $default;
+    }
+
+    /**
+     * Retorna true se TODOS os tags dados estiverem vazios no nó pai.
+     * Usado pela supressão de linhas (notas de asterisco da NT-008): a checagem
+     * é feita sobre o valor cru do XML, não sobre o texto decodificado (vira "-").
+     */
+    protected function todosVazios(?\DOMElement $parent, array $tags): bool
+    {
+        foreach ($tags as $tag) {
+            if ($this->getTag($parent, $tag, '') !== '') {
+                return false;
+            }
+        }
+        return true;
     }
 
     /**
@@ -433,18 +481,20 @@ class Danfse extends DanfseCommon
      *
      * @param float[] $boundaries Ys absolutas dos separadores entre blocos
      */
-    protected function desenharMolduraGlobal(float $yTop, float $yBottom, array $boundaries): void
+    protected function desenharMolduraGlobal(float $yTop, float $yBottom, array $boundaries, float $margemMoldura): void
     {
-        $larguraTotal = $this->maxW - 2 * $this->margesq;
-        $yPageBottom  = $this->maxH - $this->margsup;
-
+        // Retângulo externo na margem da página (borda da moldura).
+        $larguraMoldura = $this->maxW - 2 * $margemMoldura;
         $this->pdf->SetDrawColor(0, 0, 0);
         $this->pdf->SetLineWidth(0.15);
-        $this->pdf->Rect($this->margesq, $yTop, $larguraTotal, $yPageBottom - $yTop);
+        $this->pdf->Rect($margemMoldura, $yTop, $larguraMoldura, $yBottom - $yTop);
 
+        // Separadores horizontais na margem do conteúdo (recuada) — não encostam
+        // nas laterais da moldura, respeitando o padding interno.
+        $larguraConteudo = $this->maxW - 2 * $this->margesq;
         $this->pdf->SetLineWidth(0.1);
         foreach ($boundaries as $yLine) {
-            $this->pdf->Line($this->margesq, $yLine, $this->margesq + $larguraTotal, $yLine);
+            $this->pdf->Line($this->margesq, $yLine, $this->margesq + $larguraConteudo, $yLine);
         }
     }
 
@@ -524,7 +574,7 @@ class Danfse extends DanfseCommon
     // blocoTributacaoMunicipal()   implementado em TraitTributacaoMunicipal
     // blocoTributacaoFederal()     implementado em TraitTributacaoFederal
     // blocoTributacaoIBSCBS()      implementado em TraitTributacaoIBSCBS
-    protected function blocoTotaisNFSe(float $x, float $y): float          { return $y + 14; }
-    protected function blocoInfoComplementares(float $x, float $y): float  { return $y + 50; }
-    protected function blocoCanhoto(float $x, float $y): float             { return $y + 7; }
+    // blocoTotaisNFSe()            implementado em TraitTotaisNFSe
+    // blocoInfoComplementares()    implementado em TraitInfoComplementares
+    // blocoCanhoto()               implementado em TraitCanhoto
 }
