@@ -23,55 +23,70 @@ trait TraitPrestador
     {
         $altLinha = 6.4;
         $larguraTotal = $this->maxW - 2 * $this->margesq;
-        $col = $larguraTotal / 4;        // grade uniforme (igual aos demais blocos)
+        $col = $larguraTotal / 4;
         $colDupla = 2 * $col;
 
-        // Coordenadas X das 4 colunas (grade uniforme)
         $x1 = $xIni;
         $x2 = $xIni + $col;
         $x3 = $xIni + 2 * $col;
         $x4 = $xIni + 3 * $col;
 
+        // No XML de produção, dados do prestador ficam em infNFSe/emit (confirmados).
+        // Fallback para infDPS/prest (declarado) caso emit não exista.
+        $documento = $this->extrairDocumento($this->emit);
+        if ($documento === '-') {
+            $documento = $this->extrairDocumento($this->prest);
+        }
+        $im    = $this->getTag($this->emit, 'IM', '')    ?: $this->getTag($this->prest, 'IM', '');
+        $fone  = $this->getTag($this->emit, 'fone', '')  ?: $this->getTag($this->prest, 'fone', '');
+        $xNome = $this->getTag($this->emit, 'xNome', '') ?: $this->getTag($this->prest, 'xNome', '');
+        $email = $this->getTag($this->emit, 'email', '') ?: $this->getTag($this->prest, 'email', '');
+
         // ----- L1: título cinza + CNPJ/CPF/NIF + IM + Telefone -----
         $this->desenharTituloBlocoCampo($x1, $yIni, $col, $altLinha, 'PRESTADOR / FORNECEDOR');
-        $this->desenharCelula($x2, $yIni, $col, $altLinha,
-            'CNPJ / CPF / NIF', $this->extrairDocumento($this->prest));
+        $this->desenharCelula($x2, $yIni, $col, $altLinha, 'CNPJ / CPF / NIF', $documento);
         $this->desenharCelula($x3, $yIni, $col, $altLinha,
-            'Indicador Municipal (Inscrição)', $this->getTag($this->prest, 'IM', ''));
+            'Indicador Municipal (Inscrição)', $im !== '' ? $im : '-');
         $this->desenharCelula($x4, $yIni, $col, $altLinha,
-            'Telefone', $this->formatarTelefone($this->getTag($this->prest, 'fone', '')));
+            'Telefone', $this->formatarTelefone($fone));
 
         // ----- L2: Nome | Município/UF | Código IBGE/CEP -----
         $y2 = $yIni + $altLinha;
         $this->desenharCelula($x1, $y2, $colDupla, $altLinha,
             'Nome / Nome Empresarial',
-            EnumDecoder::truncate($this->getTag($this->prest, 'xNome', ''), 80));
+            EnumDecoder::truncate($xNome !== '' ? $xNome : '-', 80));
 
-        [$municipio, $uf, $cep, $cMun] = $this->extrairEndereco($this->prest);
+        // Endereço: emit (estrutura flat enderNac) tem prioridade; senão prest (end/endNac).
+        if ($this->emit && $this->getChild($this->emit, 'enderNac')) {
+            [$endLog, $municipio, $uf, $cep, $cMun] = $this->extrairEnderecoEmit($this->emit);
+        } else {
+            [$municipio, $uf, $cep, $cMun] = $this->extrairEndereco($this->prest);
+            $endLog = $this->extrairEnderecoLogradouro($this->prest);
+        }
         $munUf = $municipio !== '-' ? $municipio . ($uf !== '' ? " / {$uf}" : '') : '-';
         $this->desenharCelula($x3, $y2, $col, $altLinha, 'Município / Sigla UF', $munUf);
 
         $codCep = $cMun !== '' ? "{$cMun} / {$this->formatarCEP($cep)}" : '-';
         $this->desenharCelula($x4, $y2, $col, $altLinha, 'Código IBGE / CEP', $codCep);
 
-        // Cursor de Y corrente (linha 3 em diante pode ser suprimida — NT nota *).
         $y = $yIni + 2 * $altLinha;
 
         // ----- L3: Endereço | E-mail (NT nota *: suprime se ambos vazios) -----
-        $endereco = $this->extrairEnderecoLogradouro($this->prest);
-        $email = $this->getTag($this->prest, 'email', '');
-        if ($endereco !== '-' || $email !== '') {
+        if ($endLog !== '-' || $email !== '') {
             $this->desenharCelula($x1, $y, $colDupla, $altLinha, 'Endereço',
-                EnumDecoder::truncate($endereco, 80));
+                EnumDecoder::truncate($endLog, 80));
             $this->desenharCelula($x3, $y, $colDupla, $altLinha, 'E-mail',
-                EnumDecoder::truncate($email, 80));
+                EnumDecoder::truncate($email !== '' ? $email : '-', 80));
             $y += $altLinha;
         }
 
-        // ----- L4: Simples Nacional | Regime de Apuração -----
-        $regTrib = $this->getChild($this->prest, 'regTrib');
-        $opSimpNac = $this->getTag($regTrib, 'opSimpNac', '');
-        $regApTribSN = $this->getTag($regTrib, 'regApTribSN', '');
+        // ----- L4: Simples Nacional | Regime de Apuração (emit/regTrib > prest/regTrib) -----
+        $regTribEmit  = $this->getChild($this->emit,  'regTrib');
+        $regTribPrest = $this->getChild($this->prest, 'regTrib');
+        $opSimpNac   = $this->getTag($regTribEmit,  'opSimpNac',   '')
+                       ?: $this->getTag($regTribPrest, 'opSimpNac',   '');
+        $regApTribSN = $this->getTag($regTribEmit,  'regApTribSN', '')
+                       ?: $this->getTag($regTribPrest, 'regApTribSN', '');
 
         $this->desenharCelula($x1, $y, $col, $altLinha,
             'Simples Nacional na Data de Competência',

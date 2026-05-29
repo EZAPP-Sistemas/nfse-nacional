@@ -86,10 +86,15 @@ trait TraitInfoComplementares
         }
 
         // Totais Aproximados dos Tributos cfe. Lei nº 12.741/2012 (sempre presente)
+        // ISSQN apurado vem de infNFSe/valores (calculado); fallback ao caminho legacy.
         $federais   = $this->calcularTributosFederais();
-        $estaduais  = (float) $this->getTag($this->ibscbs, 'vIBSUF', '0');
-        $vISSQN     = (float) $this->extrairValor($this->valores, 'trib/tribMun/vISSQN', '0');
-        $vIBSMun    = (float) $this->getTag($this->ibscbs, 'vIBSMun', '0');
+        $gIBSTot    = $this->getChild($this->getChild($this->ibscbsNFSe, 'totCIBS'), 'gIBS');
+        $estaduais  = (float) ($this->extrairValor($gIBSTot, 'gIBSUFTot/vIBSUF', '')
+                               ?: $this->getTag($this->ibscbs, 'vIBSUF', '0'));
+        $vISSQN     = (float) ($this->getTag($this->valoresNFSe, 'vISSQN', '')
+                               ?: $this->extrairValor($this->valores, 'trib/tribMun/vISSQN', '0'));
+        $vIBSMun    = (float) ($this->extrairValor($gIBSTot, 'gIBSMunTot/vIBSMun', '')
+                               ?: $this->getTag($this->ibscbs, 'vIBSMun', '0'));
         $municipais = $vISSQN + $vIBSMun;
 
         $linhas[] = sprintf(
@@ -109,7 +114,8 @@ trait TraitInfoComplementares
         $vIRRF   = (float) $this->extrairValor($this->valores, 'trib/tribFed/vRetIRRF', '0');
         $vRetCP  = (float) $this->extrairValor($this->valores, 'trib/tribFed/vRetCP', '0');
         $vRetCSLL = (float) $this->extrairValor($this->valores, 'trib/tribFed/vRetCSLL', '0');
-        $vCBS    = (float) $this->getTag($this->ibscbs, 'vCBS', '0');
+        $vCBS    = (float) ($this->extrairValor($this->ibscbsNFSe, 'totCIBS/gCBS/vCBS', '')
+                            ?: $this->getTag($this->ibscbs, 'vCBS', '0'));
         return $vPis + $vCofins + $vIRRF + $vRetCP + $vRetCSLL + $vCBS;
     }
 }

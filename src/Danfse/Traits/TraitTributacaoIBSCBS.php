@@ -28,25 +28,38 @@ trait TraitTributacaoIBSCBS
         $altLinha = 6.4;
         $colQuarta = $larguraTotal / 4;
 
-        $gIBSCBS = $this->ibscbs;
-        $gIbs = $this->getChild($gIBSCBS, 'gIBS');
-        $gIbsUF = $this->getChild($gIbs, 'gIBSUF');
-        $gIbsMun = $this->getChild($gIbs, 'gIBSMun');
-        $gCBS = $this->getChild($gIBSCBS, 'gCBS');
+        // $ibscbs    = infDPS/IBSCBS   (declarados: CST, cClassTrib, cIndOp, finNFSe)
+        // $ibscbsNFSe = infNFSe/IBSCBS (calculados: valores/{uf,mun,fed}, totCIBS/{gIBS,gCBS})
+        $ibsValores = $this->getChild($this->ibscbsNFSe, 'valores');
+        $ibsUF      = $this->getChild($ibsValores, 'uf');
+        $ibsMun     = $this->getChild($ibsValores, 'mun');
+        $ibsFed     = $this->getChild($ibsValores, 'fed');
+        $totCIBS    = $this->getChild($this->ibscbsNFSe, 'totCIBS');
+        $gIBSTot    = $this->getChild($totCIBS, 'gIBS');
+        $gCBSTot    = $this->getChild($totCIBS, 'gCBS');
+
+        // Estrutura DPS-nova traz CST/cClassTrib em infDPS/IBSCBS/valores/trib/gIBSCBS.
+        // Fallback para CST/cClassTrib direto em $ibscbs (estrutura antiga sintética).
+        $gIBSCBSDec = $this->getChild(
+            $this->getChild($this->getChild($this->ibscbs, 'valores'), 'trib'),
+            'gIBSCBS'
+        );
 
         // ----- L1: TÍTULO cinza | CST / cClassTrib | Indic. Op. / Cód. IBGE / Munic. / UF -----
-        $cst = $this->getTag($gIBSCBS, 'CST', '');
-        $cClassTrib = $this->getTag($gIBSCBS, 'cClassTrib', '');
+        $cst        = $this->getTag($gIBSCBSDec, 'CST', '')        ?: $this->getTag($this->ibscbs, 'CST', '');
+        $cClassTrib = $this->getTag($gIBSCBSDec, 'cClassTrib', '') ?: $this->getTag($this->ibscbs, 'cClassTrib', '');
         $cstComp = trim(($cst !== '' ? $cst : '-') . ' / ' . ($cClassTrib !== '' ? $cClassTrib : '-'));
 
-        $cIndOp = EnumDecoder::decode(EnumDecoder::C_IND_OP, $this->getTag($gIBSCBS, 'cIndOp', ''));
-        $cLocIncid = $this->getTag($gIBSCBS, 'cLocIncid', '');
-        $uf = $this->getTag($gIBSCBS, 'UF', '');
-        $municIncid = ($cLocIncid !== '' && $cLocIncid === $this->cMunEmit) ? $this->xLocEmi : '';
+        $cIndOp = EnumDecoder::decode(EnumDecoder::C_IND_OP, $this->getTag($this->ibscbs, 'cIndOp', ''));
+        $cLocIncid = $this->getTag($this->ibscbsNFSe, 'cLocalidadeIncid', '')
+                     ?: $this->getTag($this->ibscbs, 'cLocIncid', '');
+        $xLocIncid = $this->getTag($this->ibscbsNFSe, 'xLocalidadeIncid', '')
+                     ?: (($cLocIncid !== '' && $cLocIncid === $this->cMunEmit) ? $this->xLocEmi : '');
+        $uf = $this->getTag($this->ibscbs, 'UF', '');
         $idComp = $this->montarComSeparador(' / ', [
             $cIndOp !== '-' ? $cIndOp : '',
             $cLocIncid,
-            $municIncid,
+            $xLocIncid,
             $uf,
         ]);
 
@@ -61,24 +74,29 @@ trait TraitTributacaoIBSCBS
 
         // ----- L2: Excl/Red BC | BC Após | Red. Alíq IBS/CBS | Alíq IBS Est/Mun -----
         $y2 = $yIni + $altLinha;
+        $vCalcReeRepRes = $this->getTag($ibsValores, 'vCalcReeRepRes', '');
         $this->desenharCelula($xIni, $y2, $colQuarta, $altLinha,
             'Exclusões e Reduções da Base de Cálculo',
-            $this->formatar($this->getTagFallbackIBS($gIBSCBS, ['vRedBC', 'vBCRed']), 'moeda'));
+            $this->formatar($vCalcReeRepRes, 'moeda'));
+
+        $vBCIBS = $this->getTag($ibsValores, 'vBC', '')
+                  ?: $this->getTag($this->ibscbs, 'vBC', '');
         $this->desenharCelula($xIni + $colQuarta, $y2, $colQuarta, $altLinha,
             'Base de Cálculo Após Exclusões e Reduções',
-            $this->formatar($this->getTag($gIBSCBS, 'vBC', ''), 'moeda'));
+            $this->formatar($vBCIBS, 'moeda'));
 
-        $pRedIBS = $this->getTag($gIbs, 'pRedAliq', '');
-        $pRedCBS = $this->getTag($gCBS, 'pRedAliq', '');
+        $pRedAliqUF  = $this->getTag($ibsUF, 'pRedAliqUF', '');
+        $pRedAliqMun = $this->getTag($ibsMun, 'pRedAliqMun', '');
+        $pRedAliqCBS = $this->getTag($ibsFed, 'pRedAliqCBS', '');
         $this->desenharCelula($xIni + 2 * $colQuarta, $y2, $colQuarta, $altLinha,
             'Red. Alíquota IBS / Red. Alíquota CBS',
             $this->montarComSeparador(' / ', [
-                $pRedIBS !== '' ? $pRedIBS . '%' : '',
-                $pRedCBS !== '' ? $pRedCBS . '%' : '',
+                $pRedAliqUF !== '' || $pRedAliqMun !== '' ? (($pRedAliqUF ?: '0') . '+' . ($pRedAliqMun ?: '0')) . '%' : '',
+                $pRedAliqCBS !== '' ? $pRedAliqCBS . '%' : '',
             ]));
 
-        $pAliqUF = $this->getTag($gIbsUF, 'pAliq', '');
-        $pAliqMun = $this->getTag($gIbsMun, 'pAliq', '');
+        $pAliqUF  = $this->getTag($ibsUF,  'pIBSUF',  '');
+        $pAliqMun = $this->getTag($ibsMun, 'pIBSMun', '');
         $this->desenharCelula($xIni + 3 * $colQuarta, $y2, $colQuarta, $altLinha,
             'Alíquota - IBS UF / IBS Mun',
             $this->montarComSeparador(' / ', [
@@ -88,33 +106,43 @@ trait TraitTributacaoIBSCBS
 
         // ----- L3: Alíq Efetiva IBS Mun | Valor IBS Mun | Alíq Efetiva IBS Est | Valor IBS Est -----
         $y3 = $yIni + 2 * $altLinha;
+        $pAliqEfetMun = $this->getTag($ibsMun, 'pAliqEfetMun', '');
+        $pAliqEfetUF  = $this->getTag($ibsUF,  'pAliqEfetUF',  '');
+        $vIBSMun = $this->getTag($this->getChild($gIBSTot, 'gIBSMunTot'), 'vIBSMun', '');
+        $vIBSUF  = $this->getTag($this->getChild($gIBSTot, 'gIBSUFTot'),  'vIBSUF',  '');
+
         $this->desenharCelula($xIni, $y3, $colQuarta, $altLinha,
             'Alíq. Efetiva Municipal - IBS',
-            $this->formatar($this->getTag($gIbsMun, 'pAliqEfet', ''), 'percent'));
+            $this->formatar($pAliqEfetMun, 'percent'));
         $this->desenharCelula($xIni + $colQuarta, $y3, $colQuarta, $altLinha,
             'Valor Apurado Municipal - IBS',
-            $this->formatar($this->getTagFallbackIBS($gIbsMun, ['vIBSMun', 'vIBS']), 'moeda'));
+            $this->formatar($vIBSMun, 'moeda'));
         $this->desenharCelula($xIni + 2 * $colQuarta, $y3, $colQuarta, $altLinha,
             'Alíq. Efetiva Estadual - IBS',
-            $this->formatar($this->getTag($gIbsUF, 'pAliqEfet', ''), 'percent'));
+            $this->formatar($pAliqEfetUF, 'percent'));
         $this->desenharCelula($xIni + 3 * $colQuarta, $y3, $colQuarta, $altLinha,
             'Valor Apurado Estadual - IBS',
-            $this->formatar($this->getTagFallbackIBS($gIbsUF, ['vIBSUF', 'vIBS']), 'moeda'));
+            $this->formatar($vIBSUF, 'moeda'));
 
         // ----- L4: Valor Total IBS | Alíq CBS | Alíq Efetiva CBS | Valor Total CBS -----
         $y4 = $yIni + 3 * $altLinha;
+        $vIBSTotApurado = $this->getTag($gIBSTot, 'vIBSTot', '');
+        $pAliqCBS       = $this->getTag($ibsFed, 'pCBS', '');
+        $pAliqEfetCBS   = $this->getTag($ibsFed, 'pAliqEfetCBS', '');
+        $vCBSTotApurado = $this->getTag($gCBSTot, 'vCBS', '');
+
         $this->desenharCelula($xIni, $y4, $colQuarta, $altLinha,
             'Valor Total Apurado - IBS',
-            $this->formatar($this->getTag($gIbs, 'vIBS', ''), 'moeda'));
+            $this->formatar($vIBSTotApurado, 'moeda'));
         $this->desenharCelula($xIni + $colQuarta, $y4, $colQuarta, $altLinha,
             'Alíquota - CBS',
-            $this->formatar($this->getTag($gCBS, 'pAliq', ''), 'percent'));
+            $this->formatar($pAliqCBS, 'percent'));
         $this->desenharCelula($xIni + 2 * $colQuarta, $y4, $colQuarta, $altLinha,
             'Alíquota Efetiva - CBS',
-            $this->formatar($this->getTag($gCBS, 'pAliqEfet', ''), 'percent'));
+            $this->formatar($pAliqEfetCBS, 'percent'));
         $this->desenharCelula($xIni + 3 * $colQuarta, $y4, $colQuarta, $altLinha,
             'Valor Total Apurado - CBS',
-            $this->formatar($this->getTag($gCBS, 'vCBS', ''), 'moeda'));
+            $this->formatar($vCBSTotApurado, 'moeda'));
 
         return $yIni + 4 * $altLinha;
     }

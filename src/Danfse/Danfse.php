@@ -50,8 +50,11 @@ class Danfse extends DanfseCommon
     protected ?\DOMElement $dest = null;        // NFSe/infNFSe/DPS/infDPS/IBSCBS/dest
     protected ?\DOMElement $interm = null;
     protected ?\DOMElement $serv = null;
-    protected ?\DOMElement $valores = null;
-    protected ?\DOMElement $ibscbs = null;
+    protected ?\DOMElement $valores = null;      // infDPS/valores (declarados)
+    protected ?\DOMElement $ibscbs = null;       // infDPS/IBSCBS (declarados)
+    protected ?\DOMElement $valoresNFSe = null;  // infNFSe/valores (calculados)
+    protected ?\DOMElement $ibscbsNFSe = null;   // infNFSe/IBSCBS (calculados)
+    protected ?\DOMElement $emit = null;         // infNFSe/emit (prestador confirmado)
 
     protected string $tpAmb = '2';
     protected string $cStat = '';
@@ -202,6 +205,11 @@ class Danfse extends DanfseCommon
         $this->valores = $this->getChild($this->infDPS, 'valores');
         $this->ibscbs  = $this->getChild($this->infDPS, 'IBSCBS');
         $this->dest    = $this->getChild($this->ibscbs, 'dest');
+
+        // NFSe-level (calculados pela administração tributária — NT-008 §2.4.5)
+        $this->valoresNFSe = $this->getChild($this->infNFSe, 'valores');
+        $this->ibscbsNFSe  = $this->getChild($this->infNFSe, 'IBSCBS');
+        $this->emit        = $this->getChild($this->infNFSe, 'emit');
 
         $this->tpAmb    = $this->getTag($this->infDPS, 'tpAmb', '2');
         $this->cStat    = $this->getTag($this->infNFSe, 'cStat', '');
@@ -380,6 +388,50 @@ class Danfse extends DanfseCommon
         return $partes ? implode(', ', $partes) : '-';
     }
 
+    /**
+     * Endereço a partir do nó `emit` (infNFSe/emit), cuja estrutura é flat:
+     * enderNac contém xLgr, nro, xCpl, xBairro, cMun, UF, CEP — sem wrapper `end`.
+     * Retorna [logradouroCompleto, municipio, uf, cep, cMunIbge].
+     */
+    protected function extrairEnderecoEmit(?\DOMElement $emit): array
+    {
+        if (!$emit) return ['-', '-', '', '', ''];
+        $enderNac = $this->getChild($emit, 'enderNac');
+        if ($enderNac) {
+            $partes = array_filter([
+                $this->getTag($enderNac, 'xLgr', ''),
+                $this->getTag($enderNac, 'nro', ''),
+                $this->getTag($enderNac, 'xCpl', ''),
+                $this->getTag($enderNac, 'xBairro', ''),
+            ], fn($v) => $v !== '');
+            $logradouro = $partes ? implode(', ', $partes) : '-';
+            $cMun = $this->getTag($enderNac, 'cMun', '');
+            $uf   = $this->getTag($enderNac, 'UF', '');
+            $cep  = $this->getTag($enderNac, 'CEP', '');
+            $municipio = ($cMun !== '' && $cMun === $this->cMunEmit)
+                ? $this->xLocEmi
+                : ($cMun !== '' ? "(IBGE {$cMun})" : '-');
+            return [$logradouro, $municipio, $uf, $cep, $cMun];
+        }
+        $endExt = $this->getChild($emit, 'enderExt');
+        if ($endExt) {
+            $partes = array_filter([
+                $this->getTag($endExt, 'xLgr', ''),
+                $this->getTag($endExt, 'nro', ''),
+                $this->getTag($endExt, 'xCpl', ''),
+                $this->getTag($endExt, 'xBairro', ''),
+            ], fn($v) => $v !== '');
+            return [
+                $partes ? implode(', ', $partes) : '-',
+                $this->getTag($endExt, 'xCidade', '-'),
+                $this->getTag($endExt, 'xEstProvReg', ''),
+                $this->getTag($endExt, 'cEndPost', ''),
+                $this->getTag($endExt, 'cPais', ''),
+            ];
+        }
+        return ['-', '-', '', '', ''];
+    }
+
     protected function formatarCEP(string $cep): string
     {
         $d = preg_replace('/\D/', '', $cep);
@@ -483,35 +535,19 @@ class Danfse extends DanfseCommon
      */
     protected function desenharMolduraGlobal(float $yTop, float $yBottom, array $boundaries, float $margemMoldura): void
     {
-        // Retângulo externo na margem da página (borda da moldura).
+        // Borda da página = 1pt (NT-008 §2.2.3).
         $larguraMoldura = $this->maxW - 2 * $margemMoldura;
         $this->pdf->SetDrawColor(0, 0, 0);
-        $this->pdf->SetLineWidth(0.15);
+        $this->pdf->SetLineWidth(0.353);
         $this->pdf->Rect($margemMoldura, $yTop, $larguraMoldura, $yBottom - $yTop);
 
-        // Separadores horizontais na margem do conteúdo (recuada) — não encostam
-        // nas laterais da moldura, respeitando o padding interno.
+        // Separadores horizontais entre blocos = 0,5pt (NT-008 §2.2.3). Recuados
+        // pelo padding interno — não encostam nas laterais da moldura.
         $larguraConteudo = $this->maxW - 2 * $this->margesq;
-        $this->pdf->SetLineWidth(0.1);
+        $this->pdf->SetLineWidth(0.176);
         foreach ($boundaries as $yLine) {
             $this->pdf->Line($this->margesq, $yLine, $this->margesq + $larguraConteudo, $yLine);
         }
-    }
-
-    /**
-     * Borda externa da página inteira (NT-008 §2.2.3: "página deverá ter borda de 1 ponto").
-     * 1pt = 0,353mm. Posicionada bem nas margens.
-     */
-    protected function desenharBordaPagina(): void
-    {
-        $this->pdf->SetDrawColor(0, 0, 0);
-        $this->pdf->SetLineWidth(0.353);
-        $this->pdf->Rect(
-            $this->margesq,
-            $this->margsup,
-            $this->maxW - 2 * $this->margesq,
-            $this->maxH - 2 * $this->margsup
-        );
     }
 
     /**

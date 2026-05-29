@@ -195,6 +195,48 @@ function obterXmlSintetico(string $cStat): string
     <nNFSe>4466</nNFSe>
     <dhProc>2026-05-22T14:45:43-03:00</dhProc>
     <ambGer>1</ambGer>
+    <emit>
+      <CNPJ>05405941000129</CNPJ>
+      <IM>8933</IM>
+      <xNome>JULIANO MARCAL LTDA — teste ç ã õ é</xNome>
+      <enderNac>
+        <xLgr>DOS MUNDINS</xLgr>
+        <nro>328</nro>
+        <xBairro>CENTRO</xBairro>
+        <cMun>3143104</cMun>
+        <UF>MG</UF>
+        <CEP>38500000</CEP>
+      </enderNac>
+      <fone>3438423398</fone>
+      <email>brasilcontabilidademg@gmail.com</email>
+    </emit>
+    <valores>
+      <vBC>281.00</vBC>
+      <pAliqAplic>3.00</pAliqAplic>
+      <vISSQN>8.43</vISSQN>
+      <vTotalRet>8.43</vTotalRet>
+      <vLiq>272.57</vLiq>
+    </valores>
+    <IBSCBS>
+      <cLocalidadeIncid>5107875</cLocalidadeIncid>
+      <xLocalidadeIncid>Primavera do Leste</xLocalidadeIncid>
+      <valores>
+        <vBC>262.31</vBC>
+        <vCalcReeRepRes>0.00</vCalcReeRepRes>
+        <uf><pIBSUF>0.10</pIBSUF><pAliqEfetUF>0.10</pAliqEfetUF></uf>
+        <mun><pIBSMun>0.00</pIBSMun><pAliqEfetMun>0.00</pAliqEfetMun></mun>
+        <fed><pCBS>0.90</pCBS><pAliqEfetCBS>0.90</pAliqEfetCBS></fed>
+      </valores>
+      <totCIBS>
+        <vTotNF>275.19</vTotNF>
+        <gIBS>
+          <vIBSTot>0.26</vIBSTot>
+          <gIBSUFTot><vIBSUF>0.26</vIBSUF></gIBSUFTot>
+          <gIBSMunTot><vIBSMun>0.00</vIBSMun></gIBSMunTot>
+        </gIBS>
+        <gCBS><vCBS>2.36</vCBS></gCBS>
+      </totCIBS>
+    </IBSCBS>
     <DPS>
       <infDPS>
         <tpAmb>2</tpAmb>
@@ -284,6 +326,48 @@ function obterXmlSinteticoCompleto(): string
     <nNFSe>4466</nNFSe>
     <dhProc>2026-05-22T14:45:43-03:00</dhProc>
     <ambGer>1</ambGer>
+    <emit>
+      <CNPJ>05405941000129</CNPJ>
+      <IM>8933</IM>
+      <xNome>JULIANO MARCAL LTDA — teste ç ã õ é</xNome>
+      <enderNac>
+        <xLgr>DOS MUNDINS</xLgr>
+        <nro>328</nro>
+        <xBairro>CENTRO</xBairro>
+        <cMun>3143104</cMun>
+        <UF>MG</UF>
+        <CEP>38500000</CEP>
+      </enderNac>
+      <fone>3438423398</fone>
+      <email>brasilcontabilidademg@gmail.com</email>
+    </emit>
+    <valores>
+      <vBC>920.00</vBC>
+      <pAliqAplic>3.00</pAliqAplic>
+      <vISSQN>27.60</vISSQN>
+      <vTotalRet>169.10</vTotalRet>
+      <vLiq>780.90</vLiq>
+    </valores>
+    <IBSCBS>
+      <cLocalidadeIncid>5107875</cLocalidadeIncid>
+      <xLocalidadeIncid>Primavera do Leste</xLocalidadeIncid>
+      <valores>
+        <vBC>1000.00</vBC>
+        <vCalcReeRepRes>0.00</vCalcReeRepRes>
+        <uf><pIBSUF>10.00</pIBSUF><pAliqEfetUF>9.50</pAliqEfetUF></uf>
+        <mun><pIBSMun>7.00</pIBSMun><pAliqEfetMun>6.80</pAliqEfetMun></mun>
+        <fed><pCBS>9.00</pCBS><pAliqEfetCBS>8.80</pAliqEfetCBS></fed>
+      </valores>
+      <totCIBS>
+        <vTotNF>953.90</vTotNF>
+        <gIBS>
+          <vIBSTot>85.00</vIBSTot>
+          <gIBSUFTot><vIBSUF>50.00</vIBSUF></gIBSUFTot>
+          <gIBSMunTot><vIBSMun>35.00</vIBSMun></gIBSMunTot>
+        </gIBS>
+        <gCBS><vCBS>88.00</vCBS></gCBS>
+      </totCIBS>
+    </IBSCBS>
     <DPS>
       <infDPS>
         <tpAmb>2</tpAmb>
@@ -338,7 +422,9 @@ function obterXmlSinteticoCompleto(): string
           <vServPrest>
             <vServ>1000.00</vServ>
           </vServPrest>
-          <vDescIncond>50.00</vDescIncond>
+          <vDescCondIncond>
+            <vDescIncond>50.00</vDescIncond>
+          </vDescCondIncond>
           <trib>
             <tribMun>
               <tribISSQN>1</tribISSQN>

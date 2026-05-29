@@ -40,22 +40,24 @@ trait TraitCabecalho
         // ----- Bloco "DADOS DA NFS-e" -----
         // L1 ocupa cols 1+2+3 (CHAVE longa); L2/L3/L4 usam cols 1, 2 e 3
         // (3 campos cada). Col 4 fica reservada à área do QR Code.
-        $altLinha = 6.7;
-        $alturaBlocoDados = 4 * $altLinha;
+        // NT-008 §2.4.5: L1 (Chave) tem altura 0,77cm; demais linhas 0,67cm.
+        $altL1Chave = 7.7;
+        $altLinha   = 6.7;
+        $alturaBlocoDados = $altL1Chave + 3 * $altLinha;
         $larguraEsq = 3 * $cw;          // L1 ocupa as 3 primeiras colunas
         $yDados = $yIni + $altCabecalho;
 
-        // Separador full-width entre faixa cinza e área DADOS NFS-e
+        // Separador full-width entre faixa cinza e área DADOS NFS-e (0,5pt = NT-008 §2.2.3).
         $this->pdf->SetDrawColor(0, 0, 0);
-        $this->pdf->SetLineWidth(0.1);
+        $this->pdf->SetLineWidth(0.176);
         $this->pdf->Line($xIni, $yDados, $xIni + $larguraTotal, $yDados);
 
         // L1: Chave de acesso (cols 1+2+3; col 4 livre para QR)
-        $this->desenharCelulaCaixaAlta($xIni, $yDados, $larguraEsq, $altLinha,
+        $this->desenharCelulaCaixaAlta($xIni, $yDados, $larguraEsq, $altL1Chave,
             'CHAVE DE ACESSO DA NFS-E', $this->chaveAcesso);
 
         // L2: nNFSe | dCompet | dhProc (cols 1, 2, 3)
-        $yL2 = $yDados + $altLinha;
+        $yL2 = $yDados + $altL1Chave;
         $this->desenharCelulaCaixaAlta($xIni, $yL2, $cw, $altLinha,
             'NÚMERO DA NFS-E', $this->getTag($this->infNFSe, 'nNFSe', ''));
         $this->desenharCelulaCaixaAlta($xIni + $cw, $yL2, $cw, $altLinha,
@@ -64,7 +66,7 @@ trait TraitCabecalho
             'DATA E HORA DA EMISSÃO DA NFS-E', $this->formatar($this->getTag($this->infNFSe, 'dhProc', ''), 'data'));
 
         // L3: nDPS | serie | dhEmi (cols 1, 2, 3)
-        $yL3 = $yDados + 2 * $altLinha;
+        $yL3 = $yDados + $altL1Chave + $altLinha;
         $this->desenharCelulaCaixaAlta($xIni, $yL3, $cw, $altLinha,
             'NÚMERO DA DPS', $this->getTag($this->infDPS, 'nDPS', ''));
         $this->desenharCelulaCaixaAlta($xIni + $cw, $yL3, $cw, $altLinha,
@@ -73,7 +75,7 @@ trait TraitCabecalho
             'DATA E HORA DA EMISSÃO DA DPS', $this->formatar($this->getTag($this->infDPS, 'dhEmi', ''), 'data'));
 
         // L4: tpEmit (cinza obrigatório §2.2.3) | cStat | finNFSe (cols 1, 2, 3)
-        $yL4 = $yDados + 3 * $altLinha;
+        $yL4 = $yDados + $altL1Chave + 2 * $altLinha;
         $this->pdf->SetFillColor(242, 242, 242);
         $this->pdf->Rect($xIni, $yL4, $cw, $altLinha, 'F');
         $this->desenharCelulaCaixaAlta($xIni, $yL4, $cw, $altLinha,

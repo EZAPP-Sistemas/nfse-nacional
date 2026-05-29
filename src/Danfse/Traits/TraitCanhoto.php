@@ -30,7 +30,7 @@ trait TraitCanhoto
         $x2 = $xIni + $colQuarta;          // fim col 1
         $x3 = $xIni + 2 * $colQuarta;      // fim col 2 / início col 3 (largura 2*colQuarta)
         $this->pdf->SetDrawColor(0, 0, 0);
-        $this->pdf->SetLineWidth(0.1);
+        $this->pdf->SetLineWidth(0.176);   // 0,5pt — NT-008 §2.2.3
         $this->pdf->Line($x2, $yIni, $x2, $yIni + $altura);
         $this->pdf->Line($x3, $yIni, $x3, $yIni + $altura);
 
