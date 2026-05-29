@@ -92,20 +92,25 @@ trait TraitTributacaoMunicipal
         }
 
         // ----- L4: BC | Alíquota | Retenção | ISSQN Apurado (sempre impressa) -----
+        // Valores calculados em infNFSe/valores (spec); fallback ao tribMun (DPS) para XML legado.
+        $vBC    = $this->getTag($this->valoresNFSe, 'vBC', '')
+                  ?: $this->getTag($tribMun, 'vBC', '');
+        $pAliq  = $this->getTag($this->valoresNFSe, 'pAliqAplic', '')
+                  ?: $this->getTag($tribMun, 'pAliq', '');
+        $vISSQN = $this->getTag($this->valoresNFSe, 'vISSQN', '')
+                  ?: $this->getTag($tribMun, 'vISSQN', '');
+
         $this->desenharCelula($xIni, $y, $colQuarta, $altLinha,
-            'BC ISSQN',
-            $this->formatar($this->getTag($tribMun, 'vBC', ''), 'moeda'));
+            'BC ISSQN', $this->formatar($vBC, 'moeda'));
         $this->desenharCelula($xIni + $colQuarta, $y, $colQuarta, $altLinha,
-            'Alíquota Aplicada',
-            $this->formatar($this->getTag($tribMun, 'pAliq', ''), 'percent'));
+            'Alíquota Aplicada', $this->formatar($pAliq, 'percent'));
         $this->desenharCelula($xIni + 2 * $colQuarta, $y, $colQuarta, $altLinha,
             'Retenção do ISSQN',
             EnumDecoder::truncate(
                 EnumDecoder::decode(EnumDecoder::TP_RET_ISSQN, $this->getTag($tribMun, 'tpRetISSQN', '')),
                 40));
         $this->desenharCelula($xIni + 3 * $colQuarta, $y, $colQuarta, $altLinha,
-            'ISSQN Apurado',
-            $this->formatar($this->getTag($tribMun, 'vISSQN', ''), 'moeda'));
+            'ISSQN Apurado', $this->formatar($vISSQN, 'moeda'));
         $y += $altLinha;
 
         return $y;

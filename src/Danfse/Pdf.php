@@ -154,16 +154,21 @@ class Pdf extends \FPDF
     /**
      * Imprime marca d'água diagonal (NT-008 §2.5.1 CANCELADA / §2.5.2 SUBSTITUÍDA).
      */
-    public function marcaDagua(string $texto, int $cinzaK = 35, int $tamanho = 50): void
-    {
+    public function marcaDagua(
+        string $texto,
+        int $cinzaK = 35,            // K35 conforme NT-008 §2.5: 255*(1-K/100) = 165
+        int $tamanho = 65,
+        float $deslocamentoY = 10.0  // mm acima do centro da página — cobre blocos do topo
+    ): void {
         $tomCinza = (int) (255 - (255 * $cinzaK / 100));
         $this->SetFont(self::FONT_TITULO, '', $tamanho);
         $this->SetTextColor($tomCinza, $tomCinza, $tomCinza);
         $this->_out('q');
         $angle = 45;
         $rad = deg2rad($angle);
+        $yCentro = $this->h / 2 - $deslocamentoY;
         $cx = $this->w / 2 * $this->k;
-        $cy = ($this->h - $this->h / 2) * $this->k;
+        $cy = $yCentro * $this->k;
         $this->_out(sprintf(
             '%.5F %.5F %.5F %.5F %.5F %.5F cm',
             cos($rad), sin($rad), -sin($rad), cos($rad),
@@ -171,7 +176,7 @@ class Pdf extends \FPDF
             $cy - sin($rad) * $cx - cos($rad) * $cy
         ));
         $w = $this->GetStringWidth($this->latin($texto));
-        $this->Text($this->w / 2 - $w / 2, $this->h / 2, $this->latin($texto));
+        $this->Text($this->w / 2 - $w / 2, $yCentro, $this->latin($texto));
         $this->_out('Q');
         $this->SetTextColor(0, 0, 0);
     }

@@ -25,24 +25,49 @@ trait TraitTotaisNFSe
         $colQuarta = $larguraTotal / 4;
 
         // ----- Valores extraídos do XML -----
-        $vServ        = (float) $this->getTag($this->valores, 'vServ', '0');
-        $vDescIncond  = (float) $this->getTag($this->valores, 'vDescIncond', '0');
-        $vDescCond    = (float) $this->getTag($this->valores, 'vDescCond', '0');
+        // vServ declarado em infDPS/valores/vServPrest/vServ (estrutura nova) com fallback ao
+        // caminho direto antigo (vServ no nível valores).
+        $vServPrest = $this->getChild($this->valores, 'vServPrest');
+        $vServ = (float) ($this->getTag($vServPrest, 'vServ', '')
+                          ?: $this->getTag($this->valores, 'vServ', '0'));
 
-        $vISSQNRet = (float) $this->extrairValor($this->valores, 'trib/tribMun/vISSQNRet', '0');
-        $vRetCP    = (float) $this->extrairValor($this->valores, 'trib/tribFed/vRetCP', '0');
-        $vIRRF     = (float) $this->extrairValor($this->valores, 'trib/tribFed/vRetIRRF', '0');
-        $vRetPIS   = (float) $this->extrairValor($this->valores, 'trib/tribFed/vRetPis', '0');
-        $vRetCOF   = (float) $this->extrairValor($this->valores, 'trib/tribFed/vRetCofins', '0');
-        $vRetCSLL  = (float) $this->extrairValor($this->valores, 'trib/tribFed/vRetCSLL', '0');
-        $totRetencoes = $vISSQNRet + $vRetCP + $vIRRF + $vRetPIS + $vRetCOF + $vRetCSLL;
+        // Descontos: infDPS/valores/vDescCondIncond/{vDescIncond, vDescCond} com fallback.
+        $vDescCI = $this->getChild($this->valores, 'vDescCondIncond');
+        $vDescIncond = (float) ($this->getTag($vDescCI, 'vDescIncond', '')
+                                ?: $this->getTag($this->valores, 'vDescIncond', '0'));
+        $vDescCond   = (float) ($this->getTag($vDescCI, 'vDescCond', '')
+                                ?: $this->getTag($this->valores, 'vDescCond', '0'));
 
-        $vIBS = (float) $this->getTag($this->ibscbs, 'vIBS', '0');
-        $vCBS = (float) $this->getTag($this->ibscbs, 'vCBS', '0');
+        // Total retenções e Valor Líquido: preferencial em infNFSe/valores (calculados);
+        // fallback à soma componente a componente do XML sintético antigo.
+        $vTotalRetXml = $this->getTag($this->valoresNFSe, 'vTotalRet', '');
+        $vLiqXml      = $this->getTag($this->valoresNFSe, 'vLiq', '');
+
+        if ($vTotalRetXml !== '' && $vLiqXml !== '') {
+            $totRetencoes = (float) $vTotalRetXml;
+            $vLiq         = (float) $vLiqXml;
+        } else {
+            $vISSQNRet = (float) $this->extrairValor($this->valores, 'trib/tribMun/vISSQNRet', '0');
+            $vRetCP    = (float) $this->extrairValor($this->valores, 'trib/tribFed/vRetCP', '0');
+            $vIRRF     = (float) $this->extrairValor($this->valores, 'trib/tribFed/vRetIRRF', '0');
+            $vRetPIS   = (float) $this->extrairValor($this->valores, 'trib/tribFed/vRetPis', '0');
+            $vRetCOF   = (float) $this->extrairValor($this->valores, 'trib/tribFed/vRetCofins', '0');
+            $vRetCSLL  = (float) $this->extrairValor($this->valores, 'trib/tribFed/vRetCSLL', '0');
+            $totRetencoes = $vISSQNRet + $vRetCP + $vIRRF + $vRetPIS + $vRetCOF + $vRetCSLL;
+            $vLiq = $vServ - $vDescIncond - $vDescCond - $totRetencoes;
+        }
+
+        // Totais IBS/CBS: preferencial em infNFSe/IBSCBS/totCIBS; fallback a $ibscbs (DPS antigo).
+        $totCIBS = $this->getChild($this->ibscbsNFSe, 'totCIBS');
+        $vIBS = (float) ($this->extrairValor($totCIBS, 'gIBS/vIBSTot', '')
+                         ?: $this->getTag($this->ibscbs, 'vIBS', '0'));
+        $vCBS = (float) ($this->extrairValor($totCIBS, 'gCBS/vCBS', '')
+                         ?: $this->getTag($this->ibscbs, 'vCBS', '0'));
         $totIBSCBS = $vIBS + $vCBS;
 
-        $vLiq = $vServ - $vDescIncond - $vDescCond - $totRetencoes;
-        $vLiqMaisIBSCBS = $vLiq + $totIBSCBS;
+        // Valor Líquido + IBS/CBS: preferencial em infNFSe/IBSCBS/totCIBS/vTotNF.
+        $vTotNFXml = $this->getTag($totCIBS, 'vTotNF', '');
+        $vLiqMaisIBSCBS = $vTotNFXml !== '' ? (float) $vTotNFXml : ($vLiq + $totIBSCBS);
 
         // ----- L1 -----
         $this->desenharTituloBlocoCampo($xIni, $yIni, $colQuarta, $altLinha,
