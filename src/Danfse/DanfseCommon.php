@@ -19,7 +19,6 @@ abstract class DanfseCommon
     protected float $padInterno = 1.5;   // padding lateral entre moldura e conteúdo
     protected float $maxW = 210;
     protected float $maxH = 297;
-    protected string $defaultFont = 'helvetica';
     protected bool $debug = false;
     protected ?string $logo = null;
     protected ?string $logoAlign = 'L';
@@ -50,12 +49,6 @@ abstract class DanfseCommon
     public function margemInternaParameters(float $mm): self
     {
         $this->padInterno = max(0.0, $mm);
-        return $this;
-    }
-
-    public function setDefaultFont(string $font): self
-    {
-        $this->defaultFont = $font;
         return $this;
     }
 

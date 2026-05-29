@@ -47,7 +47,6 @@ try {
     fwrite(STDOUT, "✓ Danfse instanciado\n");
 
     $danfse->printParameters('P', 'A4', 1.5, 1.5)
-        ->setDefaultFont('helvetica')
         ->logoMunicipioParameters(null)
         ->exibirCanhoto(true)
         ->creditsIntegratorFooter('Smoke test — Sygma/EZAPP', false);
@@ -79,7 +78,6 @@ try {
     $xmlCancelada = obterXmlSintetico('101');
     $danfseCancelada = new Danfse($xmlCancelada);
     $danfseCancelada->printParameters('P', 'A4', 1.5, 1.5)
-        ->setDefaultFont('helvetica')
         ->creditsIntegratorFooter('Smoke test (cancelada)', false);
 
     $pdfCancelada = $danfseCancelada->render();
@@ -105,12 +103,12 @@ try {
     $p->AddPage();
 
     // Título
-    $p->SetFont('helvetica', 'B', 14);
+    $p->SetFont(Pdf::FONT_TITULO, 'B', 14);
     $p->SetXY(10, 10);
     $p->Cell(190, 8, $p->latin('Pdf wrapper — smoke test'), 0, 1, 'C');
 
     // textBox com acentuação portuguesa
-    $p->SetFont('helvetica', '', 9);
+    $p->SetFont(Pdf::FONT_CONTEUDO, '', 9);
     $p->textBox(10, 25, 90, 25,
         "Texto com acentuação: ç ã õ é à ê ó ú. "
         . "Lorem ipsum dolor sit amet, consectetur adipiscing elit, "
@@ -120,14 +118,14 @@ try {
     fwrite(STDOUT, "✓ textBox + acentuação executados\n");
 
     // cellFit com texto que estoura
-    $p->SetFont('helvetica', '', 8);
+    $p->SetFont(Pdf::FONT_CONTEUDO, '', 8);
     $p->SetXY(10, 55);
     $p->cellFit(40, 5, 'Nome muito longo que precisa encolher fonte', 1);
     fwrite(STDOUT, "✓ cellFit executado\n");
 
     // QR Code
     $p->SetXY(110, 25);
-    $p->SetFont('helvetica', 'B', 8);
+    $p->SetFont(Pdf::FONT_TITULO, 'B', 8);
     $p->Cell(80, 4, 'QR Code (chillerlan/php-qrcode):', 0, 1);
     $chave = '31431042205405941000129000000000446626055512757118';
     $p->qrCode(110, 32, 25, 'https://www.nfse.gov.br/ConsultaPublica/?tpc=1&chave=' . $chave);
@@ -135,7 +133,7 @@ try {
 
     // Marca d'água numa segunda página
     $p->AddPage();
-    $p->SetFont('helvetica', '', 12);
+    $p->SetFont(Pdf::FONT_CONTEUDO, '', 12);
     $p->SetXY(10, 10);
     $p->Cell(190, 8, $p->latin('Página 2 — teste de marca d\'água'), 0, 1, 'C');
     $p->marcaDagua('SUBSTITUÍDA');
@@ -160,7 +158,6 @@ try {
 
     $danfseCompleto = new Danfse(obterXmlSinteticoCompleto());
     $danfseCompleto->printParameters('P', 'A4', 1.5, 1.5)
-        ->setDefaultFont('helvetica')
         ->logoMunicipioParameters(null)
         ->exibirCanhoto(true)
         ->creditsIntegratorFooter('Smoke test — completo', false);

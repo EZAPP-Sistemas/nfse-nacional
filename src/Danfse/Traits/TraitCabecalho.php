@@ -3,6 +3,7 @@
 namespace Hadder\NfseNacional\Danfse\Traits;
 
 use Hadder\NfseNacional\Danfse\EnumDecoder;
+use Hadder\NfseNacional\Danfse\Pdf;
 
 /**
  * Cabeçalho + bloco "DADOS DA NFS-e" — NT-008 §2.1.1, §2.1.2, §2.4.3.
@@ -104,10 +105,10 @@ trait TraitCabecalho
         }
         // Fallback: placeholder textual estilizado
         $this->pdf->SetTextColor(60, 100, 60);
-        $this->pdf->SetFont($this->defaultFont, 'B', 14);
+        $this->pdf->SetFont(Pdf::FONT_TITULO, 'B', 14);
         $this->pdf->SetXY($x, $y + 1.0);
         $this->pdf->Cell(40, 5, 'NFSe', 0, 0, 'L');
-        $this->pdf->SetFont($this->defaultFont, '', 6);
+        $this->pdf->SetFont(Pdf::FONT_CONTEUDO, '', 6);
         $this->pdf->SetXY($x, $y + 5.5);
         $this->pdf->Cell(40, 3, $this->pdf->latin('Nota Fiscal de Serviço Eletrônica'), 0, 0, 'L');
         $this->pdf->SetTextColor(0, 0, 0);
@@ -116,7 +117,7 @@ trait TraitCabecalho
     private function desenharTituloCentral(float $x, float $yBase, float $w): void
     {
         $this->pdf->SetTextColor(0, 0, 0);
-        $this->pdf->SetFont($this->defaultFont, 'B', 9);
+        $this->pdf->SetFont(Pdf::FONT_TITULO, 'B', 9);
 
         $this->pdf->SetXY($x, $yBase + 1.5);
         $this->pdf->Cell($w, 4, $this->pdf->latin('DANFSe v2.0'), 0, 0, 'C');
@@ -136,12 +137,12 @@ trait TraitCabecalho
     {
         $this->pdf->SetTextColor(0, 0, 0);
 
-        $this->pdf->SetFont($this->defaultFont, '', 8);
+        $this->pdf->SetFont(Pdf::FONT_CONTEUDO, '', 8);
         $this->pdf->SetXY($x + 0.6, $yBase + 0.8);
         $municipio = $this->xLocEmi !== '' ? "Município: {$this->xLocEmi}" : 'Município: -';
         $this->pdf->Cell($w - 1.2, 4, $this->pdf->latin($municipio), 0, 0, 'L');
 
-        $this->pdf->SetFont($this->defaultFont, '', 6);
+        $this->pdf->SetFont(Pdf::FONT_CONTEUDO, '', 6);
         $ambGer = $this->getTag($this->infNFSe, 'ambGer', '');
         $this->pdf->SetXY($x + 0.6, $yBase + 5.5);
         $this->pdf->Cell($w - 1.2, 3,
@@ -171,7 +172,7 @@ trait TraitCabecalho
         $this->pdf->qrCode($xQr, 13.5, $qrSize, $url);
 
         $this->pdf->SetTextColor(0, 0, 0);
-        $this->pdf->SetFont($this->defaultFont, '', 6);
+        $this->pdf->SetFont(Pdf::FONT_CONTEUDO, '', 6);
         $this->pdf->textBox(
             $xCol4,
             29.5,
