@@ -2,6 +2,8 @@
 
 namespace Hadder\NfseNacional\Danfse\Traits;
 
+use Hadder\NfseNacional\Danfse\Pdf;
+
 /**
  * Bloco "Informações Complementares" — NT-008 §2.1.12 e §2.4.5.
  *
@@ -35,7 +37,7 @@ trait TraitInfoComplementares
         $yTexto = $yIni + $altTitulo + 0.6;
         $altTexto = max(8.0, $yBottom - $yTexto - 0.6);
 
-        $this->pdf->SetFont($this->defaultFont, '', 7);
+        $this->pdf->SetFont(Pdf::FONT_CONTEUDO, '', 7);
         $this->pdf->textBox(
             $xIni + 0.6,
             $yTexto,

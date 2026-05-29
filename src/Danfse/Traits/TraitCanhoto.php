@@ -2,6 +2,8 @@
 
 namespace Hadder\NfseNacional\Danfse\Traits;
 
+use Hadder\NfseNacional\Danfse\Pdf;
+
 /**
  * Bloco "Ciência da Operação" (canhoto) — NT-008 §2.1.13 e §2.4.5.
  *
@@ -34,7 +36,7 @@ trait TraitCanhoto
 
         // ----- Col 1: DATA CIENTIFICAÇÃO -----
         $this->pdf->SetTextColor(0, 0, 0);
-        $this->pdf->SetFont($this->defaultFont, 'B', 6);
+        $this->pdf->SetFont(Pdf::FONT_TITULO, 'B', 7);
         $this->pdf->SetXY($xIni + 0.6, $yIni + 0.6);
         $this->pdf->Cell($colQuarta - 1.2, 2.2, $this->pdf->latin('DATA CIENTIFICAÇÃO:'), 0, 0, 'L');
 
@@ -48,7 +50,7 @@ trait TraitCanhoto
 
         $nNFSe = $this->getTag($this->infNFSe, 'nNFSe', '-');
         $chave = $this->chaveAcesso !== '' ? $this->chaveAcesso : '-';
-        $this->pdf->SetFont($this->defaultFont, '', 7);
+        $this->pdf->SetFont(Pdf::FONT_CONTEUDO, '', 7);
         $this->pdf->SetXY($x3 + 0.6, $yIni + 3.2);
         $this->pdf->cellFit(2 * $colQuarta - 1.2, 3.0, "{$nNFSe} / {$chave}", 0, 0, 'L');
 

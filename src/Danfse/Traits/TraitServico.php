@@ -3,6 +3,7 @@
 namespace Hadder\NfseNacional\Danfse\Traits;
 
 use Hadder\NfseNacional\Danfse\EnumDecoder;
+use Hadder\NfseNacional\Danfse\Pdf;
 
 /**
  * Bloco "Dados do Serviço Prestado" — NT-008 §2.1.7 e §2.4.5.
@@ -77,12 +78,12 @@ trait TraitServico
         }
 
         $this->pdf->SetTextColor(0, 0, 0);
-        $this->pdf->SetFont($this->defaultFont, 'B', 6);
+        $this->pdf->SetFont(Pdf::FONT_TITULO, 'B', 6);
         $this->pdf->SetXY($xIni + 0.6, $y3 + 0.4);
         $this->pdf->Cell($larguraTotal - 1.2, 2.2,
             $this->pdf->latin('Descrição do Serviço'), 0, 0, 'L');
 
-        $this->pdf->SetFont($this->defaultFont, '', 7);
+        $this->pdf->SetFont(Pdf::FONT_CONTEUDO, '', 7);
         $this->pdf->textBox(
             $xIni + 0.6,
             $y3 + 2.8,

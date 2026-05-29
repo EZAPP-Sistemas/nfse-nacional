@@ -28,10 +28,7 @@ final class EnumDecoder
 
     /** finNFSe — Finalidade da NFS-e (§2.4.5). */
     public const FIN_NFSE = [
-        '1' => 'NFS-e regular',
-        '2' => 'NFS-e complementar',
-        '3' => 'NFS-e de ajuste',
-        '4' => 'NFS-e em substituição',
+        '0' => 'NFS-e regular'
     ];
 
     /** tribISSQN — Tipo de Tributação do ISSQN (§2.1.8). */

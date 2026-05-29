@@ -27,6 +27,25 @@ if (!class_exists('FPDF', false)) {
 class Pdf extends \FPDF
 {
     /**
+     * Fonte para títulos/labels (NT-008 §2.4: Arial).
+     */
+    public const FONT_TITULO = 'Arial';
+
+    /**
+     * Fonte para conteúdos (NT-008 §2.4: Microsoft Sans Serif).
+     */
+    public const FONT_CONTEUDO = 'MicrosoftSansSerif';
+
+    public function __construct(string $orientation = 'P', string $unit = 'mm', $size = 'A4')
+    {
+        parent::__construct($orientation, $unit, $size);
+        $this->fontpath = __DIR__ . '/fonts/';
+        $this->AddFont(self::FONT_TITULO,   '',  'arial.php');
+        $this->AddFont(self::FONT_TITULO,   'B', 'arialb.php');
+        $this->AddFont(self::FONT_CONTEUDO, '',  'microsoftsansserif.php');
+    }
+
+    /**
      * Desenha caixa de texto com word-wrap automático.
      * Usado em descrição de serviço, informações complementares e endereços longos.
      */
@@ -138,10 +157,7 @@ class Pdf extends \FPDF
     public function marcaDagua(string $texto, int $cinzaK = 35, int $tamanho = 50): void
     {
         $tomCinza = (int) (255 - (255 * $cinzaK / 100));
-        // Fallback para 'helvetica' caso nenhuma fonte tenha sido setada antes
-        // (cenário possível em PDFs minimalistas ou stubs em desenvolvimento).
-        $familia = $this->FontFamily !== '' ? $this->FontFamily : 'helvetica';
-        $this->SetFont($familia, '', $tamanho);
+        $this->SetFont(self::FONT_TITULO, '', $tamanho);
         $this->SetTextColor($tomCinza, $tomCinza, $tomCinza);
         $this->_out('q');
         $angle = 45;

@@ -405,7 +405,7 @@ class Danfse extends DanfseCommon
         $this->pdf->SetDrawColor(0, 0, 0);
         $this->pdf->SetLineWidth(0.176); // 0,5 pt = 0,176 mm
         $this->pdf->SetTextColor(0, 0, 0);
-        $this->pdf->SetFont($this->defaultFont, 'B', 7);
+        $this->pdf->SetFont(Pdf::FONT_TITULO, 'B', 7);
         $this->pdf->SetXY($x, $y);
         $this->pdf->Cell($w, $h, $this->pdf->latin(mb_strtoupper($titulo, 'UTF-8')), 1, 0, 'L', true);
     }
@@ -417,10 +417,10 @@ class Danfse extends DanfseCommon
     {
         $this->pdf->SetTextColor(0, 0, 0);
         $this->pdf->SetXY($x, $y);
-        $this->pdf->SetFont($this->defaultFont, 'B', 6);
+        $this->pdf->SetFont(Pdf::FONT_TITULO, 'B', 6);
         $this->pdf->Cell($w, 2.2, $this->pdf->latin($label), 0, 0, 'L');
         $this->pdf->SetXY($x, $y + 2.3);
-        $this->pdf->SetFont($this->defaultFont, '', 7);
+        $this->pdf->SetFont(Pdf::FONT_CONTEUDO, '', 7);
         $this->pdf->cellFit($w, $h - 2.3, $valor, 0, 0, 'L');
     }
 
@@ -433,10 +433,10 @@ class Danfse extends DanfseCommon
     protected function desenharCelula(float $x, float $y, float $w, float $h, string $label, string $valor): void
     {
         $this->pdf->SetTextColor(0, 0, 0);
-        $this->pdf->SetFont($this->defaultFont, 'B', 6);
+        $this->pdf->SetFont(Pdf::FONT_TITULO, 'B', 6);
         $this->pdf->SetXY($x + 0.6, $y + 0.4);
         $this->pdf->Cell($w - 1.2, 2.2, $this->pdf->latin($label), 0, 0, 'L');
-        $this->pdf->SetFont($this->defaultFont, '', 7);
+        $this->pdf->SetFont(Pdf::FONT_CONTEUDO, '', 7);
         $this->pdf->SetXY($x + 0.6, $y + 2.8);
         $this->pdf->cellFit($w - 1.2, $h - 3.0, $valor !== '' ? $valor : '-', 0, 0, 'L');
     }
@@ -448,10 +448,10 @@ class Danfse extends DanfseCommon
     protected function desenharCelulaCaixaAlta(float $x, float $y, float $w, float $h, string $label, string $valor): void
     {
         $this->pdf->SetTextColor(0, 0, 0);
-        $this->pdf->SetFont($this->defaultFont, 'B', 7);
+        $this->pdf->SetFont(Pdf::FONT_TITULO, 'B', 7);
         $this->pdf->SetXY($x + 0.6, $y + 0.5);
         $this->pdf->Cell($w - 1.2, 2.8, $this->pdf->latin($label), 0, 0, 'L');
-        $this->pdf->SetFont($this->defaultFont, '', 7);
+        $this->pdf->SetFont(Pdf::FONT_CONTEUDO, '', 7);
         $this->pdf->SetXY($x + 0.6, $y + 3.4);
         $this->pdf->cellFit($w - 1.2, $h - 3.5, $valor !== '' ? $valor : '-', 0, 0, 'L');
     }
@@ -468,7 +468,7 @@ class Danfse extends DanfseCommon
         $this->pdf->SetFillColor(242, 242, 242);
         $this->pdf->Rect($x, $y, $w, $h, 'F');  // só preenche, sem desenhar borda (a borda do bloco cuida)
         $this->pdf->SetTextColor(0, 0, 0);
-        $this->pdf->SetFont($this->defaultFont, 'B', 7);
+        $this->pdf->SetFont(Pdf::FONT_TITULO, 'B', 7);
         $this->pdf->SetXY($x + 0.6, $y);
         $this->pdf->Cell($w - 1.2, $h, $this->pdf->latin(mb_strtoupper($titulo, 'UTF-8')), 0, 0, 'L', false);
     }
@@ -521,7 +521,7 @@ class Danfse extends DanfseCommon
     protected function desenharFaixaSupressao(float $x, float $y, float $w, float $h, string $texto): void
     {
         $this->pdf->SetTextColor(0, 0, 0);
-        $this->pdf->SetFont($this->defaultFont, 'B', 7);
+        $this->pdf->SetFont(Pdf::FONT_TITULO, 'B', 7);
         $this->pdf->SetXY($x, $y);
         $this->pdf->Cell($w, $h, $this->pdf->latin($texto), 0, 0, 'C');
     }
@@ -549,7 +549,7 @@ class Danfse extends DanfseCommon
         if ($this->creditMessage === null) {
             return;
         }
-        $this->pdf->SetFont($this->defaultFont, '', 5);
+        $this->pdf->SetFont(Pdf::FONT_CONTEUDO, '', 5);
         $this->pdf->SetTextColor(120, 120, 120);
         $this->pdf->SetXY($this->margesq, $this->maxH - 4);
         $msg = $this->creditMessage;
