@@ -146,4 +146,20 @@ final class EnumDecoder
         }
         return mb_substr($value, 0, $maxLen - 3) . '...';
     }
+
+    /**
+     * Trunca a string mantendo até `$threshold` caracteres + '...' quando excede.
+     * Semântica do NT-008 §2.4.5: "Utilizar reticências (...), caso a descrição supere N caracteres".
+     *
+     * Diferença para {@see truncate()}: aqui `$threshold` é o número de caracteres
+     * VISÍVEIS antes do '...' (saída total: $threshold + 3 quando truncado).
+     * Em truncate(), o parâmetro é o tamanho TOTAL da saída (incluindo '...').
+     */
+    public static function truncateAfter(string $value, int $threshold): string
+    {
+        if (mb_strlen($value) <= $threshold) {
+            return $value;
+        }
+        return mb_substr($value, 0, $threshold) . '...';
+    }
 }

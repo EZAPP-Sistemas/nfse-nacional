@@ -91,9 +91,9 @@ trait TraitPrestador
         $this->desenharCelula($x1, $y, $col, $altLinha,
             'Simples Nacional na Data de Competência',
             EnumDecoder::truncate(EnumDecoder::decode(EnumDecoder::OP_SIMP_NAC, $opSimpNac), 40));
-        $this->desenharCelula($x3, $y, $colDupla, $altLinha,
+        $this->desenharCelula($x2, $y, 3 * $col, $altLinha,
             'Regime de Apuração Tributária pelo SN',
-            EnumDecoder::truncate(EnumDecoder::decode(EnumDecoder::REG_AP_TRIB_SN, $regApTribSN), 80));
+            EnumDecoder::truncate(EnumDecoder::decode(EnumDecoder::REG_AP_TRIB_SN, $regApTribSN), 120));
         $y += $altLinha;
 
         return $y;

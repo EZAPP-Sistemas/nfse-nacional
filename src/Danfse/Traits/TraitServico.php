@@ -31,9 +31,11 @@ trait TraitServico
     protected function blocoServico(float $xIni, float $yIni): float
     {
         $larguraTotal = $this->maxW - 2 * $this->margesq;
+        $larguraTextoUtil = $larguraTotal - 1.2;
         $altL1 = 6.4;
-        $altL2 = 6.4;
-        $altL3 = 18.0;
+        // Altura de uma linha de texto 7pt MS Sans Serif (FontSize 2,47mm × 1,2 ≈ 2,97mm).
+        // Usamos 3,0mm para folga marginal contra arredondamentos.
+        $lineH = 3.0;
 
         // L1: título cinza (32mm) + 3 colunas iguais
         $colTitulo = 32.0;
@@ -62,40 +64,64 @@ trait TraitServico
             $this->formatarLocalPrestacao($localPrest, $ufPrest, $paisPrest));
 
         // ----- L2: Descrição da Tributação Nacional / Municipal -----
+        // NT-008 §2.4.5 Obs.: "Não há título (label) deste campo no DANFSe" — só conteúdo.
+        // Altura dinâmica para caber até 167 chars (multi-linha se necessário).
         $y2 = $yIni + $altL1;
         $descTrib = $this->getTag($cServ, 'xDescTribNac', '');
         if ($descTrib === '') {
             $descTrib = $this->getTag($cServ, 'xDescTribMun', '');
         }
-        $this->desenharCelula($xIni, $y2, $larguraTotal, $altL2,
-            'Descrição do Código de Tributação Nacional / Municipal',
-            EnumDecoder::truncate($descTrib, 160));
+        $descTrib = EnumDecoder::truncateAfter($descTrib, 167);
+        if ($descTrib === '') {
+            $descTrib = '-';
+        }
 
-        // ----- L3: Descrição do Serviço (multi-linha) -----
-        $y3 = $yIni + $altL1 + $altL2;
+        $this->pdf->SetTextColor(0, 0, 0);
+        $this->pdf->SetFont(Pdf::FONT_CONTEUDO, '', 7);
+        $linhasL2 = max(1, $this->pdf->getNumLines($descTrib, $larguraTextoUtil));
+        $altL2 = $linhasL2 * $lineH + 0.8;
+        $this->pdf->textBox(
+            $xIni + 0.6,
+            $y2 + 0.4,
+            $larguraTextoUtil,
+            $altL2 - 0.8,
+            $descTrib,
+            'L',
+            'T'
+        );
+
+        // ----- L3: Descrição do Serviço (label "Descrição do Serviço" + texto multi-linha) -----
+        // Altura dinâmica para caber até 1297 chars — bloco expande verticalmente conforme
+        // necessário, e o bloco "Informações Complementares" abaixo absorve a folga.
+        $y3 = $y2 + $altL2;
         $descricao = $this->getTag($cServ, 'xDescServ', '');
+        $descricao = EnumDecoder::truncateAfter($descricao, 1297);  // NT-008 §2.4.5
         if ($descricao === '') {
             $descricao = '-';
         }
 
-        $this->pdf->SetTextColor(0, 0, 0);
+        $labelOffset = 2.8;  // espaço do label bold 6pt + folga
+        $this->pdf->SetFont(Pdf::FONT_CONTEUDO, '', 7);
+        $linhasL3 = max(1, $this->pdf->getNumLines($descricao, $larguraTextoUtil));
+        $altL3 = $labelOffset + $linhasL3 * $lineH + 0.4;
+
         $this->pdf->SetFont(Pdf::FONT_TITULO, 'B', 6);
         $this->pdf->SetXY($xIni + 0.6, $y3 + 0.4);
-        $this->pdf->Cell($larguraTotal - 1.2, 2.2,
+        $this->pdf->Cell($larguraTextoUtil, 2.2,
             $this->pdf->latin('Descrição do Serviço'), 0, 0, 'L');
 
         $this->pdf->SetFont(Pdf::FONT_CONTEUDO, '', 7);
         $this->pdf->textBox(
             $xIni + 0.6,
-            $y3 + 2.8,
-            $larguraTotal - 1.2,
-            $altL3 - 3.0,
+            $y3 + $labelOffset,
+            $larguraTextoUtil,
+            $altL3 - $labelOffset - 0.4,
             $descricao,
             'L',
             'T'
         );
 
-        return $yIni + $altL1 + $altL2 + $altL3;
+        return $y3 + $altL3;
     }
 
     /**
