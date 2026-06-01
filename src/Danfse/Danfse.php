@@ -136,6 +136,11 @@ class Danfse extends DanfseCommon
         $this->pdf->SetCreator($this->creditMessage ?? 'Hadder\\NfseNacional');
         $this->pdf->AddPage();
 
+        // Marca d'água como camada de fundo (NT-008 §2.5.1 CANCELADA / §2.5.2 SUBSTITUÍDA).
+        // Desenhada PRIMEIRO; conteúdo subsequente é renderizado por cima — assim a marca
+        // fica "atrás" do texto, como em uma marca d'água real.
+        $this->aplicarMarcaDagua();
+
         // Margem da moldura externa (posição na borda da página) preservada.
         // O conteúdo e os separadores usam uma margem recuada (padding interno):
         // todos os blocos leem $this->margesq, então recuamos temporariamente.
@@ -186,7 +191,6 @@ class Danfse extends DanfseCommon
 
         $this->desenharMolduraGlobal($yStart, $yPageBottom, $boundaries, $margemMoldura);
 
-        $this->aplicarMarcaDagua();   // §2.5.1 CANCELADA / §2.5.2 SUBSTITUÍDA
         $this->rodapeCreditos();
 
         // Restaura a margem original (higiene, caso render() seja reusado).
@@ -611,9 +615,9 @@ class Danfse extends DanfseCommon
         $this->pdf->SetTextColor(120, 120, 120);
         $this->pdf->SetXY($this->margesq, $this->maxH - 4);
         $msg = $this->creditMessage;
-        if ($this->creditPowered) {
+       /*  if ($this->creditPowered) {
             $msg .= ' — Powered by Hadder\\NfseNacional';
-        }
+        } */
         $this->pdf->Cell($this->maxW - 2 * $this->margesq, 3, $this->pdf->latin($msg), 0, 0, 'C');
         $this->pdf->SetTextColor(0, 0, 0);
     }
