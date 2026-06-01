@@ -61,7 +61,10 @@ trait TraitTributacaoFederal
             $this->desenharCelula($xIni + 2 * $colQuarta, $y, 2 * $colQuarta, $altLinha,
                 'Descrição Contrib. Sociais - Retidas',
                 EnumDecoder::truncate(
-                    EnumDecoder::decode(EnumDecoder::TP_RET_PIS_COFINS, $this->getTag($piscofins, 'tpRetPISCofins', '')),
+                    EnumDecoder::decode(
+                        EnumDecoder::TP_RET_PIS_COFINS,
+                        $this->getTagFallbackTF($piscofins, ['tpRetPisCofins', 'tpRetPISCofins'])
+                    ),
                     80));
             $y += $altLinha;
         }

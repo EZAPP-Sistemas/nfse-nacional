@@ -3,6 +3,7 @@
 namespace Hadder\NfseNacional\Danfse\Traits;
 
 use Hadder\NfseNacional\Danfse\EnumDecoder;
+use Hadder\NfseNacional\Danfse\LocalidadeIbge;
 
 /**
  * Bloco "Tributação Municipal (ISSQN)" — NT-008 §2.1.8 e §2.4.5.
@@ -36,13 +37,15 @@ trait TraitTributacaoMunicipal
             EnumDecoder::truncate(
                 EnumDecoder::decode(EnumDecoder::TRIB_ISSQN, $this->getTag($tribMun, 'tribISSQN', '')),
                 40));
+        // Código IBGE de incidência: infNFSe/cLocIncid (calculado pela administração
+        // tributária); fallback para tribMun/cLocIncid em XML legado. UF/País são
+        // derivados do código IBGE; o nome vem de infNFSe/xLocIncid.
+        $cLocIncid = $this->getTag($this->infNFSe, 'cLocIncid', '')
+                     ?: $this->getTag($tribMun, 'cLocIncid', '');
+        ['uf' => $ufIncid, 'pais' => $paisIncid] = LocalidadeIbge::resolver($cLocIncid);
         $this->desenharCelula($xIni + 2 * $colQuarta, $yIni, 2 * $colQuarta, $altLinha,
             'Município / Sigla UF / País de Incidência do ISSQN',
-            $this->formatarMunicipioUfPais(
-                $this->getTag($tribMun, 'cLocIncid', ''),
-                $this->getTag($tribMun, 'UF', ''),
-                $this->getTag($tribMun, 'cPais', '')
-            ));
+            $this->formatarMunicipioUfPais($this->xLocIncid, $ufIncid, $paisIncid));
 
         // Cursor de Y corrente — L2 e L3 podem ser suprimidas (NT nota **).
         $y = $yIni + $altLinha;
@@ -128,13 +131,9 @@ trait TraitTributacaoMunicipal
         return '';
     }
 
-    private function formatarMunicipioUfPais(string $cMun, string $uf, string $cPais): string
+    private function formatarMunicipioUfPais(string $nome, string $uf, string $pais): string
     {
-        $partes = array_filter([
-            $cMun !== '' ? $cMun : '',
-            $uf !== '' ? $uf : '',
-            $cPais !== '' && $cPais !== '1058' ? $cPais : '',
-        ], fn($v) => $v !== '');
+        $partes = array_filter([$nome, $uf, $pais], fn($v) => $v !== '');
         return $partes ? implode(' / ', $partes) : '-';
     }
 }

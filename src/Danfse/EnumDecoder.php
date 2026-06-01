@@ -95,18 +95,18 @@ final class EnumDecoder
         '3' => 'Retido pelo Intermediário',
     ];
 
-    /** tpRetPisCofins — Descrição das Contribuições Sociais Retidas (§2.1.9). */
+    /** tpRetPisCofins — Tipo de retenção PIS/COFINS e CSLL (§2.1.9, NT-008). */
     public const TP_RET_PIS_COFINS = [
         '0' => 'PIS/COFINS/CSLL Não Retidos',
-        '1' => 'PIS Retido',
-        '2' => 'COFINS Retido',
-        '3' => 'CSLL Retido',
-        '4' => 'PIS/COFINS Retidos',
-        '5' => 'PIS/CSLL Retidos',
-        '6' => 'COFINS/CSLL Retidos',
-        '7' => 'PIS/COFINS/CSLL Retidos',
-        '8' => 'PIS Não Retido / COFINS e CSLL Retidos',
-        '9' => 'PIS/COFINS Não Retidos / CSLL Retido',
+        '1' => 'PIS/COFINS Retido',
+        '2' => 'PIS/COFINS Não Retido',
+        '3' => 'PIS/COFINS/CSLL Retidos',
+        '4' => 'PIS/COFINS Retidos, CSLL Não Retido',
+        '5' => 'PIS Retido, COFINS/CSLL Não Retido',
+        '6' => 'COFINS Retido, PIS/CSLL Não Retido',
+        '7' => 'PIS Não Retido, COFINS/CSLL Retidos',
+        '8' => 'PIS/COFINS Não Retido, CSLL Retidos',
+        '9' => 'COFINS Não Retido, PIS/CSLL Retidos',
     ];
 
     /** cIndOp — Indicador de Operação IBS/CBS (§2.1.10). */
