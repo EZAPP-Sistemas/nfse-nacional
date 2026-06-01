@@ -615,9 +615,9 @@ class Danfse extends DanfseCommon
         $this->pdf->SetTextColor(120, 120, 120);
         $this->pdf->SetXY($this->margesq, $this->maxH - 4);
         $msg = $this->creditMessage;
-        if ($this->creditPowered) {
+       /*  if ($this->creditPowered) {
             $msg .= ' — Powered by Hadder\\NfseNacional';
-        }
+        } */
         $this->pdf->Cell($this->maxW - 2 * $this->margesq, 3, $this->pdf->latin($msg), 0, 0, 'C');
         $this->pdf->SetTextColor(0, 0, 0);
     }
