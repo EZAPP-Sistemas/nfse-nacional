@@ -3,6 +3,7 @@
 namespace Hadder\NfseNacional\Danfse\Traits;
 
 use Hadder\NfseNacional\Danfse\EnumDecoder;
+use Hadder\NfseNacional\Danfse\LocalidadeIbge;
 use Hadder\NfseNacional\Danfse\Pdf;
 
 /**
@@ -44,7 +45,7 @@ trait TraitServico
         $x4 = $x3 + $colCampo;
 
         $cServ = $this->getChild($this->serv, 'cServ');
-        [$cLocPrest, $ufPrest, $cPaisPrest] = $this->extrairLocalPrestacao();
+        [$localPrest, $ufPrest, $paisPrest] = $this->extrairLocalPrestacao();
 
         $cTribNac = $this->getTag($cServ, 'cTribNac', '');
         $cTribMun = $this->getTag($cServ, 'cTribMun', '');
@@ -58,7 +59,7 @@ trait TraitServico
             'Código NBS', $this->getTag($cServ, 'cNBS', ''));
         $this->desenharCelula($x4, $yIni, $colCampo, $altL1,
             'Local Prestação / UF / País',
-            $this->formatarLocalPrestacao($cLocPrest, $ufPrest, $cPaisPrest));
+            $this->formatarLocalPrestacao($localPrest, $ufPrest, $paisPrest));
 
         // ----- L2: Descrição da Tributação Nacional / Municipal -----
         $y2 = $yIni + $altL1;
@@ -98,38 +99,35 @@ trait TraitServico
     }
 
     /**
-     * Retorna [cLocPrestacao, UF, cPais] do nó serv/locPrest.
-     * Suporta tanto endereço nacional quanto exterior.
+     * Retorna [nomeLocalPrestacao, UF, País] do local da prestação.
+     *
+     * O nome do município vem de infNFSe/xLocPrestacao (calculado pela
+     * administração tributária); a UF e o País são derivados do código IBGE
+     * em serv/locPrest/cLocPrestacao via {@see LocalidadeIbge::resolver()},
+     * pois o leiaute não possui tags de UF/País neste nó.
      *
      * @return array{0:string,1:string,2:string}
      */
     private function extrairLocalPrestacao(): array
     {
         $locPrest = $this->getChild($this->serv, 'locPrest');
-        if (!$locPrest) {
-            return ['', '', ''];
+        $cLoc = $locPrest ? $this->getTag($locPrest, 'cLocPrestacao', '') : '';
+
+        ['uf' => $uf, 'pais' => $pais] = LocalidadeIbge::resolver($cLoc);
+
+        // Nome do local: preferir xLocPrestacao; fallback para xLocEmi quando a
+        // prestação ocorre no próprio município emitente (regra geral §2.1.7).
+        $nome = $this->xLocPrestacao;
+        if ($nome === '' && $cLoc !== '' && $cLoc === $this->cMunEmit) {
+            $nome = $this->xLocEmi;
         }
-        // Nacional: locPrest/cLocPrestacao (código IBGE 7 dígitos)
-        $cLoc = $this->getTag($locPrest, 'cLocPrestacao', '');
-        // UF pode vir explicit em locPrest/UF ou ser inferida do município (não temos lookup local)
-        $uf   = $this->getTag($locPrest, 'UF', '');
-        // País: presença de cPais indica prestação no exterior
-        $cPais = $this->getTag($locPrest, 'cPais', '');
-        return [$cLoc, $uf, $cPais];
+
+        return [$nome, $uf, $pais];
     }
 
-    private function formatarLocalPrestacao(string $cLoc, string $uf, string $cPais): string
+    private function formatarLocalPrestacao(string $nome, string $uf, string $pais): string
     {
-        if ($cPais !== '' && $cPais !== '1058') {
-            // Exterior (1058 = Brasil)
-            return ($cLoc !== '' ? $cLoc . ' / ' : '') . ($uf !== '' ? $uf . ' / ' : '') . $cPais;
-        }
-        if ($cLoc === '' && $uf === '') {
-            // Fallback: se locPrest não informado, usa município do emitente (regra geral §2.1.7)
-            $cLoc = $this->cMunEmit;
-        }
-        $partes = array_filter([$cLoc, $uf, $cPais === '1058' ? 'BR' : ''],
-            fn($v) => $v !== '');
+        $partes = array_filter([$nome, $uf, $pais], fn($v) => $v !== '');
         return $partes ? implode(' / ', $partes) : '-';
     }
 }

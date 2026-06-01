@@ -191,6 +191,9 @@ function obterXmlSintetico(string $cStat): string
 <NFSe xmlns="http://www.sped.fazenda.gov.br/nfse">
   <infNFSe Id="NFS31431042205405941000129000000000446626055512757118">
     <xLocEmi>Monte Carmelo</xLocEmi>
+    <xLocPrestacao>Primavera do Leste</xLocPrestacao>
+    <cLocIncid>5107875</cLocIncid>
+    <xLocIncid>Primavera do Leste</xLocIncid>
     <cStat>{$cStat}</cStat>
     <nNFSe>4466</nNFSe>
     <dhProc>2026-05-22T14:45:43-03:00</dhProc>
@@ -322,6 +325,9 @@ function obterXmlSinteticoCompleto(): string
 <NFSe xmlns="http://www.sped.fazenda.gov.br/nfse">
   <infNFSe Id="NFS31431042205405941000129000000000446626055512757118">
     <xLocEmi>Monte Carmelo</xLocEmi>
+    <xLocPrestacao>Primavera do Leste</xLocPrestacao>
+    <cLocIncid>5107875</cLocIncid>
+    <xLocIncid>Primavera do Leste</xLocIncid>
     <cStat>100</cStat>
     <nNFSe>4466</nNFSe>
     <dhProc>2026-05-22T14:45:43-03:00</dhProc>
@@ -442,7 +448,7 @@ function obterXmlSinteticoCompleto(): string
             </tribMun>
             <tribFed>
               <piscofins>
-                <tpRetPISCofins>7</tpRetPISCofins>
+                <tpRetPisCofins>4</tpRetPisCofins>
                 <vPis>6.50</vPis>
                 <vCofins>30.00</vCofins>
               </piscofins>

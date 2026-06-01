@@ -3,6 +3,7 @@
 namespace Hadder\NfseNacional\Danfse\Traits;
 
 use Hadder\NfseNacional\Danfse\EnumDecoder;
+use Hadder\NfseNacional\Danfse\LocalidadeIbge;
 
 /**
  * Bloco "Tributação IBS / CBS" — NT-008 §2.1.10 e §2.4.5.
@@ -55,7 +56,8 @@ trait TraitTributacaoIBSCBS
                      ?: $this->getTag($this->ibscbs, 'cLocIncid', '');
         $xLocIncid = $this->getTag($this->ibscbsNFSe, 'xLocalidadeIncid', '')
                      ?: (($cLocIncid !== '' && $cLocIncid === $this->cMunEmit) ? $this->xLocEmi : '');
-        $uf = $this->getTag($this->ibscbs, 'UF', '');
+        // UF derivada do código IBGE da localidade (leiaute não possui tag de UF aqui).
+        $uf = LocalidadeIbge::resolver($cLocIncid)['uf'];
         $idComp = $this->montarComSeparador(' / ', [
             $cIndOp !== '-' ? $cIndOp : '',
             $cLocIncid,

@@ -60,6 +60,8 @@ class Danfse extends DanfseCommon
     protected string $cStat = '';
     protected string $cMunEmit = '';
     protected string $xLocEmi = '';
+    protected string $xLocPrestacao = '';   // infNFSe/xLocPrestacao (nome do local da prestação)
+    protected string $xLocIncid = '';        // infNFSe/xLocIncid (nome do município de incidência do ISSQN)
     protected string $chaveAcesso = '';
 
     protected ?string $logoMunicipio = null;
@@ -215,6 +217,8 @@ class Danfse extends DanfseCommon
         $this->cStat    = $this->getTag($this->infNFSe, 'cStat', '');
         $this->cMunEmit = $this->getTag($this->infDPS, 'cLocEmi', '');
         $this->xLocEmi  = $this->getTag($this->infNFSe, 'xLocEmi', '');
+        $this->xLocPrestacao = $this->getTag($this->infNFSe, 'xLocPrestacao', '');
+        $this->xLocIncid     = $this->getTag($this->infNFSe, 'xLocIncid', '');
 
         $id = $this->infNFSe?->getAttribute('Id') ?? '';
         $this->chaveAcesso = str_starts_with($id, 'NFS') ? substr($id, 3) : $id;
@@ -354,10 +358,18 @@ class Danfse extends DanfseCommon
         if ($endNac) {
             $cMun = $this->getTag($endNac, 'cMun', '');
             $cep = $this->getTag($endNac, 'CEP', '');
-            if ($cMun !== '' && $cMun === $this->cMunEmit) {
-                return [$this->xLocEmi, '', $cep, $cMun];
+            // Nome/UF não vêm no XML (TCEnderNac só tem cMun + CEP): resolve pela
+            // tabela IBGE embutida; fallback para xLocEmi quando é o município
+            // emitente; fallback final para o próprio código.
+            $loc = LocalidadeIbge::resolver($cMun);
+            $nome = $loc['nome'];
+            if ($nome === '' && $cMun !== '' && $cMun === $this->cMunEmit) {
+                $nome = $this->xLocEmi;
             }
-            return [$cMun !== '' ? "(IBGE {$cMun})" : '-', '', $cep, $cMun];
+            if ($nome === '' && $cMun !== '') {
+                $nome = "(IBGE {$cMun})";
+            }
+            return [$nome !== '' ? $nome : '-', $loc['uf'], $cep, $cMun];
         }
         $endExt = $this->getChild($end, 'endExt');
         if ($endExt) {
@@ -408,9 +420,19 @@ class Danfse extends DanfseCommon
             $cMun = $this->getTag($enderNac, 'cMun', '');
             $uf   = $this->getTag($enderNac, 'UF', '');
             $cep  = $this->getTag($enderNac, 'CEP', '');
-            $municipio = ($cMun !== '' && $cMun === $this->cMunEmit)
-                ? $this->xLocEmi
-                : ($cMun !== '' ? "(IBGE {$cMun})" : '-');
+            // emit/enderNac já traz UF; o nome vem de xLocEmi (município emitente)
+            // ou da tabela IBGE embutida; fallback final para o código.
+            if ($cMun !== '' && $cMun === $this->cMunEmit) {
+                $municipio = $this->xLocEmi;
+            } else {
+                $loc = LocalidadeIbge::resolver($cMun);
+                $municipio = $loc['nome'] !== ''
+                    ? $loc['nome']
+                    : ($cMun !== '' ? "(IBGE {$cMun})" : '-');
+                if ($uf === '') {
+                    $uf = $loc['uf'];
+                }
+            }
             return [$logradouro, $municipio, $uf, $cep, $cMun];
         }
         $endExt = $this->getChild($emit, 'enderExt');
