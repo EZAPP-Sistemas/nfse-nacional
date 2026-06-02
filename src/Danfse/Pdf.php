@@ -157,8 +157,8 @@ class Pdf extends \FPDF
     public function marcaDagua(
         string $texto,
         int $cinzaK = 35,            // K35 conforme NT-008 §2.5: 255*(1-K/100) = 165
-        int $tamanho = 65,
-        float $deslocamentoY = 10.0  // mm acima do centro da página — cobre blocos do topo
+        int $tamanho = 50,           // NT-008 §2.5: tamanho mínimo 50pt
+        float $deslocamentoY = 25.0  // mm acima do centro da página — posiciona a marca no terço superior
     ): void {
         $tomCinza = (int) (255 - (255 * $cinzaK / 100));
         $this->SetFont(self::FONT_TITULO, '', $tamanho);
@@ -167,8 +167,9 @@ class Pdf extends \FPDF
         $angle = 45;
         $rad = deg2rad($angle);
         $yCentro = $this->h / 2 - $deslocamentoY;
+        // Pivot da rotação em coordenadas PDF (origem inferior, Y invertido em relação ao FPDF).
         $cx = $this->w / 2 * $this->k;
-        $cy = $yCentro * $this->k;
+        $cy = ($this->h - $yCentro) * $this->k;
         $this->_out(sprintf(
             '%.5F %.5F %.5F %.5F %.5F %.5F cm',
             cos($rad), sin($rad), -sin($rad), cos($rad),
