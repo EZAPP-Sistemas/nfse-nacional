@@ -31,7 +31,7 @@ trait TraitDestinatario
             $altFaixa = 4.2;
             $this->desenharFaixaSupressao(
                 $xIni, $yIni, $larguraTotal, $altFaixa,
-                'DESTINATÁRIO DA OPERAÇÃO NÃO INFORMADO NA NFS-e'
+                'DESTINATÁRIO DA OPERAÇÃO NÃO IDENTIFICADO NA NFS-e'
             );
             return $yIni + $altFaixa;
         }

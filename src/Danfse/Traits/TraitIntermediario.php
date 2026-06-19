@@ -30,7 +30,7 @@ trait TraitIntermediario
             $altFaixa = 4.2;
             $this->desenharFaixaSupressao(
                 $xIni, $yIni, $larguraTotal, $altFaixa,
-                'INTERMEDIÁRIO DA OPERAÇÃO NÃO INFORMADO NA NFS-e'
+                'INTERMEDIÁRIO DA OPERAÇÃO NÃO IDENTIFICADO NA NFS-e'
             );
             return $yIni + $altFaixa;
         }
