@@ -102,8 +102,8 @@ trait TraitTributacaoIBSCBS
         $this->desenharCelula($xIni + 3 * $colQuarta, $y2, $colQuarta, $altLinha,
             'Alíquota - IBS UF / IBS Mun',
             $this->montarComSeparador(' / ', [
-                $pAliqUF !== '' ? $pAliqUF . '%' : '',
-                $pAliqMun !== '' ? $pAliqMun . '%' : '',
+                $pAliqUF !== ''  ? number_format((float) $pAliqUF,  2, ',', '.') . '%' : '',
+                $pAliqMun !== '' ? number_format((float) $pAliqMun, 2, ',', '.') . '%' : '',
             ]));
 
         // ----- L3: Alíq Efetiva IBS Mun | Valor IBS Mun | Alíq Efetiva IBS Est | Valor IBS Est -----

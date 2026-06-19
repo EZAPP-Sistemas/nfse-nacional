@@ -461,7 +461,32 @@ class Danfse extends DanfseCommon
     protected function formatarCEP(string $cep): string
     {
         $d = preg_replace('/\D/', '', $cep);
-        return strlen($d) === 8 ? substr($d, 0, 5) . '-' . substr($d, 5) : ($cep ?: '-');
+        // Máscara nn.nnn-nnn (8 dígitos).
+        return strlen($d) === 8
+            ? substr($d, 0, 2) . '.' . substr($d, 2, 3) . '-' . substr($d, 5)
+            : ($cep ?: '-');
+    }
+
+    /**
+     * Máscara do Código de Tributação Nacional: nn.nn.nn (6 dígitos).
+     */
+    protected function formatarCTribNac(string $cod): string
+    {
+        $d = preg_replace('/\D/', '', $cod);
+        return strlen($d) === 6
+            ? substr($d, 0, 2) . '.' . substr($d, 2, 2) . '.' . substr($d, 4)
+            : ($cod ?: '');
+    }
+
+    /**
+     * Máscara do Código NBS: n.nnnn.nn.nn (9 dígitos).
+     */
+    protected function formatarCNBS(string $cod): string
+    {
+        $d = preg_replace('/\D/', '', $cod);
+        return strlen($d) === 9
+            ? substr($d, 0, 1) . '.' . substr($d, 1, 4) . '.' . substr($d, 5, 2) . '.' . substr($d, 7)
+            : ($cod ?: '');
     }
 
     protected function formatarTelefone(string $fone): string

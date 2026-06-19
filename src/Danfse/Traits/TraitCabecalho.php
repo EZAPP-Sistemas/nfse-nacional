@@ -79,10 +79,10 @@ trait TraitCabecalho
         $this->pdf->SetFillColor(242, 242, 242);
         $this->pdf->Rect($xIni, $yL4, $cw, $altLinha, 'F');
         $this->desenharCelulaCaixaAlta($xIni, $yL4, $cw, $altLinha,
-            'EMITENTE DA NFS-E',
+            'EMITENTE DA NFS-e',
             EnumDecoder::decode(EnumDecoder::TP_EMIT, $this->getTag($this->infDPS, 'tpEmit', '')));
         $this->desenharCelulaCaixaAlta($xIni + $cw, $yL4, $cw, $altLinha,
-            'SITUAÇÃO DA NFS-E',
+            'SITUAÇÃO DA NFS-e',
             EnumDecoder::truncate(EnumDecoder::decode(EnumDecoder::C_STAT, $this->cStat), 40));
         $this->desenharCelulaCaixaAlta($xIni + 2 * $cw, $yL4, $cw, $altLinha,
             'FINALIDADE',

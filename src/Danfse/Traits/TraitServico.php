@@ -15,7 +15,7 @@ use Hadder\NfseNacional\Danfse\Pdf;
  *   • Código de Tributação Nacional / Municipal (cTribNac / cTribMun)
  *   • Código da NBS (cNBS)
  *   • Local da Prestação / Sigla UF / País (cLocPrestacao / UF / cPais)
- *   • Descrição do Código de Tributação Nacional / Municipal (xDescTribNac)
+ *   • Descrição do Código de Tributação Nacional / Municipal (xTribNac / xTribMun, de infNFSe)
  *   • Descrição do Serviço (xDescServ)
  *
  * Layout em 4 linhas:
@@ -49,7 +49,7 @@ trait TraitServico
         $cServ = $this->getChild($this->serv, 'cServ');
         [$localPrest, $ufPrest, $paisPrest] = $this->extrairLocalPrestacao();
 
-        $cTribNac = $this->getTag($cServ, 'cTribNac', '');
+        $cTribNac = $this->formatarCTribNac($this->getTag($cServ, 'cTribNac', ''));
         $cTribMun = $this->getTag($cServ, 'cTribMun', '');
         $codTrib = trim(($cTribNac !== '' ? $cTribNac : '-') . ' / ' . ($cTribMun !== '' ? $cTribMun : '-'));
 
@@ -58,18 +58,20 @@ trait TraitServico
         $this->desenharCelula($x2, $yIni, $colCampo, $altL1,
             'Código de Tributação Nacional / Municipal', $codTrib);
         $this->desenharCelula($x3, $yIni, $colCampo, $altL1,
-            'Código NBS', $this->getTag($cServ, 'cNBS', ''));
+            'Código da NBS', $this->formatarCNBS($this->getTag($cServ, 'cNBS', '')));
         $this->desenharCelula($x4, $yIni, $colCampo, $altL1,
-            'Local Prestação / UF / País',
+            'Local da Prestação / Sigla UF / País',
             $this->formatarLocalPrestacao($localPrest, $ufPrest, $paisPrest));
 
         // ----- L2: Descrição da Tributação Nacional / Municipal -----
         // NT-008 §2.4.5 Obs.: "Não há título (label) deste campo no DANFSe" — só conteúdo.
         // Altura dinâmica para caber até 167 chars (multi-linha se necessário).
+        // xTribNac/xTribMun são filhas de infNFSe (campos calculados pela administração
+        // tributária — mesmo grupo de cStat/xLocIncid), não de cServ.
         $y2 = $yIni + $altL1;
-        $descTrib = $this->getTag($cServ, 'xDescTribNac', '');
+        $descTrib = $this->getTag($this->infNFSe, 'xTribNac', '');
         if ($descTrib === '') {
-            $descTrib = $this->getTag($cServ, 'xDescTribMun', '');
+            $descTrib = $this->getTag($this->infNFSe, 'xTribMun', '');
         }
         $descTrib = EnumDecoder::truncateAfter($descTrib, 167);
         if ($descTrib === '') {
