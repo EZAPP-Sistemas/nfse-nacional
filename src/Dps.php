@@ -749,6 +749,18 @@ class Dps implements DpsInterface
                 );
             }
 
+            // Campo: idAtvEvt
+            // <xs:choice> com o grupo end no XSD (TCAtvEvento): apenas um dos dois
+            // pode ser informado.
+            if (isset($this->std->infdps->serv->atvevento->idatvevt)) {
+                $this->dom->addChild(
+                    $atvEvento_inner,
+                    'idAtvEvt',
+                    $this->std->infdps->serv->atvevento->idatvevt,
+                    true
+                );
+            }
+
             // Endereço do evento
             if (isset($this->std->infdps->serv->atvevento->end)) {
                 $end_evento_inner = $this->dom->createElement('end');
@@ -778,6 +790,16 @@ class Dps implements DpsInterface
                         'nro',
                         $this->std->infdps->serv->atvevento->end->nro,
                         true
+                    );
+                }
+
+                // xCpl (opcional)
+                if (isset($this->std->infdps->serv->atvevento->end->xcpl)) {
+                    $this->dom->addChild(
+                        $end_evento_inner,
+                        'xCpl',
+                        $this->std->infdps->serv->atvevento->end->xcpl,
+                        false
                     );
                 }
 
