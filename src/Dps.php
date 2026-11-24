@@ -10,6 +10,7 @@ namespace Hadder\NfseNacional;
 use DOMException;
 use DOMNode;
 use NFePHP\Common\DOMImproved as Dom;
+use NFePHP\Common\Strings;
 use stdClass;
 
 
@@ -59,6 +60,8 @@ class Dps implements DpsInterface
     {
         if (!empty($dps)) {
             $this->std = $this->propertiesToLower($dps);
+            // trata caracteres especiais (ex.: "&") igual as libs sped-* fazem
+            $this->std = $this->equilizeParameters($this->std);
             if (empty($this->std->version)) {
                 $this->std->version = '1.01';
             }
@@ -1562,6 +1565,49 @@ class Dps implements DpsInterface
             $clone->{$newkey} = $value;
         }
         return $clone;
+    }
+
+    /**
+     * Trata os campos de texto antes de montar o XML, igual o
+     * equilizeParameters das libs sped-nfe/sped-cte/sped-mdfe, usando o
+     * Strings::replaceUnacceptableCharacters do sped-common.
+     * Sem isso o "&" chega cru no createElement e a geração do XML quebra
+     * ("unterminated entity reference").
+     * Percorre objetos e listas e devolve uma cópia, sem alterar o original
+     * (o init() pode ser chamado mais de uma vez com o mesmo $std).
+     * @param mixed $data
+     * @param string $key nome do campo (já em minúsculo)
+     * @return mixed
+     */
+    private function equilizeParameters($data, string $key = '')
+    {
+        if ($data instanceof stdClass) {
+            $clone = new stdClass();
+            foreach (get_object_vars($data) as $prop => $value) {
+                $clone->{$prop} = $this->equilizeParameters($value, (string) $prop);
+            }
+            return $clone;
+        }
+        if (is_array($data)) {
+            $lista = [];
+            foreach ($data as $idx => $value) {
+                $lista[$idx] = $this->equilizeParameters($value, $key);
+            }
+            return $lista;
+        }
+        if (!is_string($data)) {
+            return $data;
+        }
+        // xDescServ aceita quebra de linha no leiaute (TSStringComQuebraDeLinha),
+        // então trata linha a linha pra não perder as quebras
+        if ($key === 'xdescserv') {
+            $linhas = explode("\n", str_replace(["\r\n", "\r"], "\n", $data));
+            foreach ($linhas as $i => $linha) {
+                $linhas[$i] = Strings::replaceUnacceptableCharacters($linha);
+            }
+            return trim(implode("\n", $linhas));
+        }
+        return Strings::replaceUnacceptableCharacters($data);
     }
 
     //    /**
